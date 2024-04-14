@@ -27,13 +27,18 @@ balance :=  PLAYER * {} || players := {}
 OPERATIONS
 
 add_player(p) =
-  PRE p : PLAYER & p /: dom(balance) & card(players) < max_players
+  PRE p : PLAYER & p /: players & card(players) < max_players
   THEN players := players \/ {p} || balance := balance <+ {p |-> 0} 
   END;
 
 remove_player(p) =
-  PRE p : PLAYER & p : dom(balance) & card(players) > 0 & p : players
-  THEN balance := balance - {p |-> 0} || players := players - {p}
+  PRE  p : players
+  THEN balance := {p} <<|  balance || players := players - {p}
+  END;
+
+add_balance(player, amount) =
+  PRE player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance
+  THEN balance(player) := balance(player) + amount
   END;
 
 resp <-- count_players_query = 
