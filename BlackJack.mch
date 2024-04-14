@@ -1,22 +1,43 @@
 MACHINE BlackJack
 
-SETS ID={aa,bb}
+SETS 
 
-CONSTANTS iv
+PLAYER 
 
-PROPERTIES iv:ID
+CONSTANTS 
 
-VARIABLES xx
+max_balance, max_players
 
-INVARIANT xx:ID
+PROPERTIES
 
-INITIALISATION xx:=iv
+max_balance:NAT1 & max_players:NAT1
+
+VARIABLES
+
+balance
+
+INVARIANT
+
+balance : PLAYER <-> 0..max_players
+
+INITIALISATION 
+
+balance :=  {}
 
 OPERATIONS
 
-Set(yy) = 
-    PRE yy:ID 
-    THEN xx:= yy 
-    END
+add_player(p) =
+  PRE p : PLAYER & p /: dom(balance) 
+  THEN balance := balance <+ {p |-> 0} 
+  END;
+
+remove_player(p) =
+  PRE p : PLAYER & p : dom(balance) 
+  THEN balance := balance - {p |-> 0} 
+  END;
+
+resp <-- count_players_query = 
+  resp := card(dom(balance))
+
 
 END
