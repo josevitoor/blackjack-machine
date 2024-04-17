@@ -17,24 +17,24 @@ VARIABLES
 INVARIANT
   balance : players --> 0..max_balance 
                   & players <: PLAYER  
-                  & card(table_players) <= max_table_players 
-                  & table_players <: players
+	                & table_players : seq(players)
+	                &  size(table_players) <= max_table_players
                   & player_bet: players +-> 1..max_balance
-                  & player_cards : players +-> (SUIT<-> RANK)
+                  & player_cards : players --> (SUIT<-> RANK)
                   & deck : seq(SUIT * RANK)
 
 INITIALISATION 
-  balance :=  PLAYER * {} || players := {} || table_players := {} || player_bet := PLAYER * {} || deck := [] || player_cards := {}
+  balance :=  PLAYER * {} || players := {} || table_players := [] || player_bet := PLAYER * {} || deck := [] || player_cards := {}
 
 OPERATIONS
-add_player(p) =
-  PRE p : PLAYER & p /: players & card(players) < max_players
-  THEN players := players \/ {p} || balance := balance <+ {p |-> 0} 
+add_player(player) =
+  PRE player : PLAYER & player /: players & card(players) < max_players
+  THEN players := players \/ {player} || balance := balance <+ {player |-> 0} || player_cards := player_cards \/ { player |-> {} }
   END;
 
 remove_player(player) =
-  PRE  player : players & player /: dom(player_bet)
-  THEN balance := {player} <<|  balance || players := players - {player} || table_players := table_players - {player}
+  PRE  player : players & player /: dom(player_bet) &  player /: ran(table_players)
+  THEN balance := {player} <<|  balance || players := players - {player} || player_cards := {player} <<|  player_cards
   END;
 
 add_balance(player, amount) =
@@ -48,22 +48,22 @@ remove_balance(player, amount) =
    END;
     
 enter_table(player) =
-  PRE  player : players & card(table_players) < max_table_players 
-  THEN table_players := table_players \/ {player}
+  PRE  player : players & size(table_players) < max_table_players 
+  THEN table_players := table_players \/ [player]
   END;
 
 exit_table(player) = 
    PRE player : players
-   THEN table_players := table_players - {player}
+   THEN table_players := table_players - [player]
    END;
 
 bet(player, amount) =
-  PRE  player : players &  balance(player)  - amount >= 0  & player :  table_players & amount > 0
+  PRE  player : players &  balance(player)  - amount >= 0   & amount > 0 & player : ran(table_players)
   THEN player_bet := player_bet  <+ {player |-> amount}  || balance := balance  <+ {player |-> balance(player) - amount}
   END;
 
 hit(player) =
-  PRE player : players & player : table_players & size(deck) > 0 & player_bet(player) > 0
+  PRE player : players  & size(deck) > 0 & player_bet(player) > 0 & player : ran(table_players)
   THEN player_cards(player) := player_cards(player) \/ {last(deck)} || deck := front(deck)
   END;
 
