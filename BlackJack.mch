@@ -19,6 +19,7 @@ INVARIANT
   players <: USER 
   & table : seq(USER)
   & size(table) <= 6
+  & size(deck) >= 0
   & deck : seq(SUIT * RANK)
   & balance : players --> 0..max_balance
   & player_bet: players --> 0..max_balance
@@ -72,6 +73,7 @@ initialize_table_with_banker(banker) =
   PRE banker : USER & banker /: players & size(table) = 0
   THEN bankers := {banker} 
         || table := table ^ [banker]
+        || banker_ace := yes
         || banker_cards := banker_cards \/ { banker |-> {} } 
   END;
 
@@ -146,9 +148,13 @@ hit_player(player) =
         || deck := front(deck)
   END;
 
-resp <-- test(player) = 
-  PRE player: players & player : ran(table)
-  THEN resp := ran(player_cards(player))
+hit_banker(banker) =
+  PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0
+  THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)}
+       || IF ace: ran(banker_cards(banker) \/ {last(deck)})
+           THEN banker_ace := yes
+          END
+        || deck := front(deck)
   END;
 
 initialize_custom_deck =
