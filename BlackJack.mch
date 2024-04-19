@@ -3,7 +3,8 @@ MACHINE BlackJack
 SETS 
   USER;
   SUIT = {clubs, diamonds, hearts, spades};
-  RANK = {ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king}
+  RANK = {ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king};
+  ACE = {yes, no}
 
 CONSTANTS 
   max_balance, max_players
@@ -12,7 +13,7 @@ PROPERTIES
   max_balance:NAT1 & max_players:NAT1
 
 VARIABLES
-  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards
+  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards, player_ace, banker_ace
 
 INVARIANT
   players <: USER 
@@ -25,6 +26,8 @@ INVARIANT
   & bankers <: USER 
   & banker_cards : bankers --> (SUIT<-> RANK)
   & card(bankers) <= 1
+  & player_ace: players +-> ACE
+  & banker_ace: ACE
 
 INITIALISATION 
   balance :=  USER * {} 
@@ -35,6 +38,8 @@ INITIALISATION
   || player_cards := {} 
   || bankers := {}
   || banker_cards := {}
+  || player_ace := {}
+  || banker_ace := no
 
 OPERATIONS
 add_player(player) =
@@ -72,12 +77,12 @@ initialize_table_with_banker(banker) =
 
 enter_table(player) =
   PRE  player : players & size(table) < 6 & size(table) > 0 & player /: ran(table)
-  THEN table := table ^ [player]
+  THEN table := table ^ [player] || player_ace := player_ace <+ {player |-> no} 
   END;
 
 exit_table(player) = 
   PRE player : players & player /: dom(player_bet) & player : ran(table)
-  THEN table := table - [player]
+  THEN table := table - [player]  || player_ace  := {player} <<|  player_ace
   END;
 
 bet(player, amount) =
@@ -91,20 +96,23 @@ deal_initial_cards =
          & banker_cards(table(1)) = {}
   THEN
     IF player_bet(table(2)) > 0 & player_cards(table(2)) = {}
-      THEN player_cards(table(2)) := player_cards(table(2)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+      THEN player_cards(table(2)) := player_cards(table(2)) \/  {last(deck)} \/ {deck(size(deck)-1)}
+           || IF ace: ran(player_cards(table(2)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(2)) := yes END
            || deck := front(front(deck))
     END;
     IF size(table) > 2
       THEN
         IF player_bet(table(3)) > 0 & player_cards(table(3)) = {}
           THEN player_cards(table(3)) := player_cards(table(3)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
-               || deck := front(front(deck))
+              || IF ace: ran(player_cards(table(3)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(3)) := yes END
+              || deck := front(front(deck))
         END
     END;
     IF size(table) > 3
       THEN
         IF player_bet(table(4)) > 0 & player_cards(table(4)) = {}
           THEN player_cards(table(4)) := player_cards(table(4)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+               || IF ace: ran(player_cards(table(4)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(4)) := yes END
                || deck := front(front(deck))
         END
     END;
@@ -112,6 +120,7 @@ deal_initial_cards =
       THEN
         IF player_bet(table(5)) > 0 & player_cards(table(5)) = {}
           THEN player_cards(table(5)) := player_cards(table(5)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+               || IF ace: ran(player_cards(table(5)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(5)) := yes END
                || deck := front(front(deck))
         END
     END;
@@ -119,26 +128,36 @@ deal_initial_cards =
       THEN
         IF player_bet(table(6)) > 0 & player_cards(table(6)) = {}
           THEN player_cards(table(6)) := player_cards(table(6)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+               || IF ace: ran(player_cards(table(6)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(6)) := yes END
                || deck := front(front(deck))
         END
     END;
     banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)}
+           || IF ace: ran(banker_cards(table(1)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN banker_ace := yes END
            || deck := front(deck)
   END;
 
 hit_player(player) =
   PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0
-  THEN player_cards(player) := player_cards(player) \/ {last(deck)} 
-       || deck := front(deck)
+  THEN player_cards(player) := player_cards(player) \/ {last(deck)}
+       || IF ace: ran(player_cards(player) \/ {last(deck)})
+           THEN player_ace(player) := yes
+          END
+        || deck := front(deck)
+  END;
+
+resp <-- test(player) = 
+  PRE player: players & player : ran(table)
+  THEN resp := ran(player_cards(player))
   END;
 
 initialize_custom_deck =
   PRE size(table) > 1 & size(deck) = 0 & (#p . (p: players & player_bet(p) > 0))
   THEN deck := 
-        [hearts|->eight, clubs|->nine, diamonds|->seven, spades|->jack, clubs|->queen,
+        [hearts|->eight, spades|->ace, diamonds|->seven, spades|->jack, clubs|->queen,
         hearts|->three, spades|->five, diamonds|->king, clubs|->ace, diamonds|->jack,
         hearts|->king, spades|->nine, diamonds|->three, clubs|->six, hearts|->two,
-        diamonds|->two, spades|->ace, hearts|->queen, clubs|->eight, spades|->four,
+        diamonds|->two, clubs|->nine, hearts|->queen, clubs|->eight, spades|->four,
         clubs|->jack, diamonds|->ten, hearts|->seven, spades|->three, clubs|->king,
         hearts|->ten, diamonds|->queen, spades|->six, clubs|->seven, hearts|->four,
         diamonds|->ace, spades|->two, hearts|->six, clubs|->four, diamonds|->eight,
@@ -146,5 +165,6 @@ initialize_custom_deck =
         hearts|->nine, spades|->eight, clubs|->two, diamonds|->five, spades|->queen,
         hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
   END
+
 
 END
