@@ -1,35 +1,36 @@
 MACHINE BlackJack
 
 SETS 
-  PLAYER;
+  USER;
   SUIT = {clubs, diamonds, hearts, spades};
   RANK = {ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king}
 
 CONSTANTS 
-  max_balance, max_players, max_table_players
+  max_balance, max_players
 
 PROPERTIES
-  max_balance:NAT1 & max_players:NAT1 & max_table_players:NAT1
+  max_balance:NAT1 & max_players:NAT1
 
 VARIABLES
-  balance, players, table_players, player_bet, deck, player_cards, bankers, banker_cards
+  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards
 
 INVARIANT
-  players <: PLAYER  
-  & table_players : seq(PLAYER)
+  players <: USER 
+  & table : seq(USER)
+  & size(table) <= 6
   & deck : seq(SUIT * RANK)
   & balance : players --> 0..max_balance
   & player_bet: players --> 0..max_balance
   & player_cards : players --> (SUIT<-> RANK)
-  & bankers <: PLAYER 
+  & bankers <: USER 
   & banker_cards : bankers --> (SUIT<-> RANK)
   & card(bankers) <= 1
 
 INITIALISATION 
-  balance :=  PLAYER * {} 
+  balance :=  USER * {} 
   || players := {} 
-  || table_players := [] 
-  || player_bet := PLAYER * {} 
+  || table := [] 
+  || player_bet := USER * {} 
   || deck := [] 
   || player_cards := {} 
   || bankers := {}
@@ -37,7 +38,7 @@ INITIALISATION
 
 OPERATIONS
 add_player(player) =
-  PRE player : PLAYER & player /: bankers & card(players) < max_players
+  PRE player : USER & player /: bankers & player /: players &card(players) < max_players
   THEN players := players \/ {player} 
        || balance := balance <+ {player |-> 0} 
        || player_cards := player_cards \/ { player |-> {} } 
@@ -45,7 +46,7 @@ add_player(player) =
   END;
 
 remove_player(player) =
-  PRE  player : players & player_bet(player) = 0 &  player /: ran(table_players)
+  PRE  player : players & player_bet(player) = 0 &  player /: ran(table)
   THEN balance := {player} <<|  balance 
        || players := players - {player} 
        || player_cards := {player} <<|  player_cards
@@ -53,7 +54,7 @@ remove_player(player) =
   END;
 
 add_balance(player, amount) =
-  PRE player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance
+  PRE player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance & player_bet(player) = 0
   THEN balance(player) := balance(player) + amount
   END;
 
@@ -63,80 +64,87 @@ remove_balance(player, amount) =
    END;
 
 initialize_table_with_banker(banker) = 
-  PRE banker : PLAYER & banker /: players & size(table_players) = 0
+  PRE banker : USER & banker /: players & size(table) = 0
   THEN bankers := {banker} 
-        || table_players := table_players ^ [banker]
+        || table := table ^ [banker]
         || banker_cards := banker_cards \/ { banker |-> {} } 
   END;
 
 enter_table(player) =
-  PRE  player : players & size(table_players) < max_table_players & size(table_players) > 0
-  THEN table_players := table_players ^ [player]
+  PRE  player : players & size(table) < 6 & size(table) > 0 & player /: ran(table)
+  THEN table := table ^ [player]
   END;
 
 exit_table(player) = 
-  PRE player : players & player /: dom(player_bet) & player : ran(table_players)
-  THEN table_players := table_players - [player]
+  PRE player : players & player /: dom(player_bet) & player : ran(table)
+  THEN table := table - [player]
   END;
 
 bet(player, amount) =
-  PRE  player : players &  balance(player)  - amount >= 0 & amount > 0 & player : ran(table_players)
+  PRE  player : players &  balance(player)  - amount >= 0 & amount > 0 & player : ran(table) & player_cards(player) = {}
   THEN player_bet := player_bet  <+ {player |-> amount}  
-        || balance := balance  <+ {player |-> balance(player) - amount}
+       || balance := balance  <+ {player |-> balance(player) - amount}
   END;
 
 deal_initial_cards =
-  PRE size(deck) >= 2 * size(table_players) & size(table_players) > 1 & (#p . (p: players & player_bet(p) > 0))
-         & banker_cards(table_players(1)) = {}
+  PRE size(deck) >= 2 * size(table) & size(table) > 1 & (#p . (p: players & player_bet(p) > 0))
+         & banker_cards(table(1)) = {}
   THEN
-    IF player_bet(table_players(2)) > 0 & player_cards(table_players(2)) = {}
-      THEN player_cards(table_players(2)) := player_cards(table_players(2)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+    IF player_bet(table(2)) > 0 & player_cards(table(2)) = {}
+      THEN player_cards(table(2)) := player_cards(table(2)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
            || deck := front(front(deck))
     END;
-    IF size(table_players) > 3
+    IF size(table) > 2
       THEN
-        IF player_bet(table_players(3)) > 0 & player_cards(table_players(3)) = {}
-          THEN player_cards(table_players(3)) := player_cards(table_players(3)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+        IF player_bet(table(3)) > 0 & player_cards(table(3)) = {}
+          THEN player_cards(table(3)) := player_cards(table(3)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
                || deck := front(front(deck))
         END
     END;
-    IF size(table_players) > 4
+    IF size(table) > 3
       THEN
-        IF player_bet(table_players(4)) > 0 & player_cards(table_players(4)) = {}
-          THEN player_cards(table_players(4)) := player_cards(table_players(4)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+        IF player_bet(table(4)) > 0 & player_cards(table(4)) = {}
+          THEN player_cards(table(4)) := player_cards(table(4)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
                || deck := front(front(deck))
         END
     END;
-    IF size(table_players) > 5
+    IF size(table) > 4
       THEN
-        IF player_bet(table_players(5)) > 0 & player_cards(table_players(5)) = {}
-          THEN player_cards(table_players(5)) := player_cards(table_players(5)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+        IF player_bet(table(5)) > 0 & player_cards(table(5)) = {}
+          THEN player_cards(table(5)) := player_cards(table(5)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
                || deck := front(front(deck))
         END
     END;
-    banker_cards(table_players(1)) := banker_cards(table_players(1)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
-      || deck := front(front(deck))
+    IF size(table) > 5
+      THEN
+        IF player_bet(table(6)) > 0 & player_cards(table(6)) = {}
+          THEN player_cards(table(6)) := player_cards(table(6)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+               || deck := front(front(deck))
+        END
+    END;
+    banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
+           || deck := front(front(deck))
   END;
 
 hit_player(player) =
-  PRE player : players  & size(deck) > 0 & player : ran(table_players) & player_bet(player) > 0  & card(player_cards(player)) > 0
+  PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0
   THEN player_cards(player) := player_cards(player) \/ {last(deck)} 
        || deck := front(deck)
   END;
 
 initialize_custom_deck =
-  deck := 
-    [hearts|->ace, hearts|->two, hearts|->three, hearts|->four, hearts|->five,
-    hearts|->six, hearts|->seven, hearts|->eight, hearts|->nine, hearts|->ten,
-    hearts|->jack, hearts|->queen, hearts|->king,
-    clubs|->ace, clubs|->two, clubs|->three, clubs|->four, clubs|->five,
-    clubs|->six, clubs|->seven, clubs|->eight, clubs|->nine, clubs|->ten,
-    clubs|->jack, clubs|->queen, clubs|->king,
-    diamonds|->ace, diamonds|->two, diamonds|->three, diamonds|->four, diamonds|->five,
-    diamonds|->six, diamonds|->seven, diamonds|->eight, diamonds|->nine, diamonds|->ten,
-    diamonds|->jack, diamonds|->queen, diamonds|->king,
-    spades|->ace, spades|->two, spades|->three, spades|->four, spades|->five,
-    spades|->six, spades|->seven, spades|->eight, spades|->nine, spades|->ten,
-    spades|->jack, spades|->queen, spades|->king]
+  PRE size(table) > 1 & size(deck) = 0 & (#p . (p: players & player_bet(p) > 0))
+  THEN deck := 
+       [hearts|->eight, clubs|->nine, diamonds|->seven, spades|->jack, clubs|->queen,
+       hearts|->three, spades|->five, diamonds|->king, clubs|->ace, diamonds|->jack,
+       hearts|->king, spades|->nine, diamonds|->three, clubs|->six, hearts|->two,
+       diamonds|->two, spades|->ace, hearts|->queen, clubs|->eight, spades|->four,
+       clubs|->jack, diamonds|->ten, hearts|->seven, spades|->three, clubs|->king,
+       hearts|->ten, diamonds|->queen, spades|->six, clubs|->seven, hearts|->four,
+       diamonds|->ace, spades|->two, hearts|->six, clubs|->four, diamonds|->eight,
+       spades|->seven, clubs|->five, hearts|->five, diamonds|->four, spades|->ten,
+       hearts|->nine, spades|->eight, clubs|->two, diamonds|->five, spades|->queen,
+       hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
+  END
 
 END
