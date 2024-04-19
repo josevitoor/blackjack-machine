@@ -122,8 +122,8 @@ deal_initial_cards =
                || deck := front(front(deck))
         END
     END;
-    banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)} \/ {deck(size(deck)-1)} 
-           || deck := front(front(deck))
+    banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)}
+           || deck := front(deck)
   END;
 
 hit_player(player) =
@@ -135,16 +135,16 @@ hit_player(player) =
 initialize_custom_deck =
   PRE size(table) > 1 & size(deck) = 0 & (#p . (p: players & player_bet(p) > 0))
   THEN deck := 
-       [hearts|->eight, clubs|->nine, diamonds|->seven, spades|->jack, clubs|->queen,
-       hearts|->three, spades|->five, diamonds|->king, clubs|->ace, diamonds|->jack,
-       hearts|->king, spades|->nine, diamonds|->three, clubs|->six, hearts|->two,
-       diamonds|->two, spades|->ace, hearts|->queen, clubs|->eight, spades|->four,
-       clubs|->jack, diamonds|->ten, hearts|->seven, spades|->three, clubs|->king,
-       hearts|->ten, diamonds|->queen, spades|->six, clubs|->seven, hearts|->four,
-       diamonds|->ace, spades|->two, hearts|->six, clubs|->four, diamonds|->eight,
-       spades|->seven, clubs|->five, hearts|->five, diamonds|->four, spades|->ten,
-       hearts|->nine, spades|->eight, clubs|->two, diamonds|->five, spades|->queen,
-       hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
+        [hearts|->eight, clubs|->nine, diamonds|->seven, spades|->jack, clubs|->queen,
+        hearts|->three, spades|->five, diamonds|->king, clubs|->ace, diamonds|->jack,
+        hearts|->king, spades|->nine, diamonds|->three, clubs|->six, hearts|->two,
+        diamonds|->two, spades|->ace, hearts|->queen, clubs|->eight, spades|->four,
+        clubs|->jack, diamonds|->ten, hearts|->seven, spades|->three, clubs|->king,
+        hearts|->ten, diamonds|->queen, spades|->six, clubs|->seven, hearts|->four,
+        diamonds|->ace, spades|->two, hearts|->six, clubs|->four, diamonds|->eight,
+        spades|->seven, clubs|->five, hearts|->five, diamonds|->four, spades|->ten,
+        hearts|->nine, spades|->eight, clubs|->two, diamonds|->five, spades|->queen,
+        hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
   END
 
 END
