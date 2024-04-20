@@ -13,13 +13,12 @@ PROPERTIES
   max_balance:NAT1 & max_players:NAT1
 
 VARIABLES
-  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards, player_ace, banker_ace
+  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards, player_ace, banker_ace, stand
 
 INVARIANT
   players <: USER 
   & table : seq(USER)
   & size(table) <= 6
-  & size(deck) >= 0
   & deck : seq(SUIT * RANK)
   & balance : players --> 0..max_balance
   & player_bet: players --> 0..max_balance
@@ -28,7 +27,10 @@ INVARIANT
   & banker_cards : bankers --> (SUIT<-> RANK)
   & card(bankers) <= 1
   & player_ace: players +-> ACE
+  & stand <: USER 
   & banker_ace: ACE
+  & players /\ bankers = {}
+  & !u . (u: stand => u:ran(table))
 
 INITIALISATION 
   balance :=  USER * {} 
@@ -41,6 +43,7 @@ INITIALISATION
   || banker_cards := {}
   || player_ace := {}
   || banker_ace := no
+  || stand := {}
 
 OPERATIONS
 add_player(player) =
@@ -84,11 +87,11 @@ enter_table(player) =
 
 exit_table(player) = 
   PRE player : players & player /: dom(player_bet) & player : ran(table)
-  THEN table := table - [player]  || player_ace  := {player} <<|  player_ace
+  THEN table := table - [player]  || player_ace  := {player} <<|  player_ace || stand := stand - {player}
   END;
 
 bet(player, amount) =
-  PRE  player : players &  balance(player)  - amount >= 0 & amount > 0 & player : ran(table) & player_cards(player) = {}
+  PRE  player : players &  balance(player)  - amount >= 0 & amount > 0 & player : ran(table) & player_cards(player) = {} & player /: stand
   THEN player_bet := player_bet  <+ {player |-> amount}  
        || balance := balance  <+ {player |-> balance(player) - amount}
   END;
@@ -140,7 +143,7 @@ deal_initial_cards =
   END;
 
 hit_player(player) =
-  PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0
+  PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand
   THEN player_cards(player) := player_cards(player) \/ {last(deck)}
        || IF ace: ran(player_cards(player) \/ {last(deck)})
            THEN player_ace(player) := yes
@@ -149,12 +152,22 @@ hit_player(player) =
   END;
 
 hit_banker(banker) =
-  PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0
+  PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand
   THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)}
        || IF ace: ran(banker_cards(banker) \/ {last(deck)})
            THEN banker_ace := yes
           END
         || deck := front(deck)
+  END;
+
+stand_player(player) =
+  PRE player: ran(table) & card(player_cards(player)) > 2 & player /: stand
+  THEN stand := stand \/ {player}
+  END;
+
+stand_banker(banker) =
+  PRE banker: bankers & card(banker_cards(banker)) > 2 & banker /: stand
+  THEN stand := stand \/ {banker}
   END;
 
 initialize_custom_deck =
