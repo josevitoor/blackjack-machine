@@ -13,13 +13,26 @@ PROPERTIES
   max_balance:NAT1 & max_players:NAT1
 
 VARIABLES
-  balance, players, table, deck, player_bet, player_cards, bankers, banker_cards, player_ace, banker_ace, stand
+  balance, 
+  players, 
+  table, 
+  deck, 
+  player_bet, 
+  player_cards, 
+  bankers, 
+  banker_cards, 
+  player_ace, 
+  banker_ace, 
+  stand, 
+  values, 
+  user_card_values
 
 INVARIANT
   players <: USER 
   & table : seq(USER)
   & size(table) <= 6
   & deck : seq(SUIT * RANK)
+  & values : RANK <-> 1..11
   & balance : players --> 0..max_balance
   & player_bet: players --> 0..max_balance
   & player_cards : players --> (SUIT<-> RANK)
@@ -31,6 +44,8 @@ INVARIANT
   & banker_ace: ACE
   & players /\ bankers = {}
   & !u . (u: stand => u:ran(table))
+  & user_card_values : USER <-> 0..32
+  & !u . (u: dom(user_card_values)  => u:ran(table))
 
 INITIALISATION 
   balance :=  USER * {} 
@@ -44,8 +59,16 @@ INITIALISATION
   || player_ace := {}
   || banker_ace := no
   || stand := {}
+  || values := {ace |->1, two |-> 2, three |-> 3, four |-> 4, five |-> 5, six |-> 6, seven |-> 7, eight |-> 8, nine |-> 9, ten |-> 10, jack |-> 10, queen |-> 10, king |-> 10}
+  || user_card_values := USER * {} 
 
 OPERATIONS
+
+tt <-- teste_fsfsdfs(player) =
+    PRE player:players & player : ran(table)
+    THEN tt := ran({last(deck)}) 
+    END;
+
 add_player(player) =
   PRE player : USER & player /: bankers & player /: players &card(players) < max_players
   THEN players := players \/ {player} 
@@ -146,7 +169,7 @@ hit_player(player) =
   PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand
   THEN player_cards(player) := player_cards(player) \/ {last(deck)}
        || IF ace: ran(player_cards(player) \/ {last(deck)})
-           THEN player_ace(player) := yes
+           THEN player_ace(player) := yes 
           END
         || deck := front(deck)
   END;
@@ -187,3 +210,4 @@ initialize_custom_deck =
 
 
 END
+
