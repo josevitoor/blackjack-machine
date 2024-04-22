@@ -43,9 +43,9 @@ INVARIANT
   & stand <: USER 
   & banker_ace: ACE
   & players /\ bankers = {}
-  & !u . (u: stand => u:ran(table))
+  & !uu . (uu: stand => uu:ran(table))
   & user_card_values : USER <-> 0..32
-  & !u . (u: dom(user_card_values)  => u:ran(table))
+  & !uu . (uu: dom(user_card_values)  => uu:ran(table))
 
 INITIALISATION 
   balance :=  USER * {} 
@@ -136,9 +136,9 @@ deal_initial_cards =
                ELSE user_card_values(table(2)) := values(first_card) +  values(second_card)
                END
           END
-        END;
+        END||
         deck := front(front(deck))
-    END;
+    END||
     IF size(table) > 2
       THEN
         IF player_bet(table(3)) > 0 & player_cards(table(3)) = {}
@@ -154,10 +154,10 @@ deal_initial_cards =
                 ELSE user_card_values(table(3)) := values(first_card) +  values(second_card)
                END
               END
-            END;
+            END||
             deck := front(front(deck))
         END
-    END;
+    END||
     IF size(table) > 3
       THEN
         IF player_bet(table(4)) > 0 & player_cards(table(4)) = {}
@@ -173,10 +173,10 @@ deal_initial_cards =
                  ELSE user_card_values(table(4)) := values(first_card) +  values(second_card)
                  END
               END
-            END;
+            END||
             deck := front(front(deck))
         END
-    END;
+    END||
     IF size(table) > 4
       THEN
         IF player_bet(table(5)) > 0 & player_cards(table(5)) = {}
@@ -192,10 +192,10 @@ deal_initial_cards =
                  ELSE user_card_values(table(5)) := values(first_card) +  values(second_card)
                  END
               END
-            END;
+            END||
             deck := front(front(deck))
         END
-    END;
+    END||
     IF size(table) > 5
       THEN
         IF player_bet(table(6)) > 0 & player_cards(table(6)) = {}
@@ -216,7 +216,7 @@ deal_initial_cards =
         END
     END ||
     banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)} ||
-    IF ace: ran(banker_cards(table(1)) \/ {last(deck)}) THEN banker_ace := yes END;
+    IF ace: ran(banker_cards(table(1)) \/ {last(deck)}) THEN banker_ace := yes END||
      ANY first_card WHERE first_card : ran({last(deck)})
        THEN
          IF banker_ace = yes
@@ -247,7 +247,7 @@ hit_player(player) =
 
 hit_banker(banker) =
   PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!p . (p : players & card(player_cards(p)) >= 2 => p : stand)) & user_card_values(banker) < 17
-  THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)};
+  THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)}||
        IF ace: ran({last(deck)})
          THEN
           IF banker_ace = yes or user_card_values(banker) + 11 > 21
@@ -292,7 +292,7 @@ result_game(banker) =
     END
     || player_cards(table(2)) := {}
     || user_card_values(table(2)) := 0
-    || player_ace(table(2)) := no;
+    || player_ace(table(2)) := no||
     IF size(table) > 2
     THEN
       IF card(player_cards(table(3))) >= 2
@@ -315,7 +315,7 @@ result_game(banker) =
           || user_card_values(table(3)) := 0
           || player_ace(table(3)) := no
       END
-    END;
+    END||
      IF size(table) > 3
     THEN
       IF card(player_cards(table(4))) >= 2
@@ -338,7 +338,7 @@ result_game(banker) =
           || user_card_values(table(4)) := 0
           || player_ace(table(4)) := no
       END
-    END;
+    END||
     IF size(table) > 4
     THEN
       IF card(player_cards(table(5))) >= 2
@@ -361,7 +361,7 @@ result_game(banker) =
           || user_card_values(table(5)) := 0
           || player_ace(table(5)) := no
       END
-    END;
+    END||
     IF size(table) > 5
     THEN
       IF card(player_cards(table(6))) >= 2
@@ -384,7 +384,7 @@ result_game(banker) =
           || user_card_values(table(6)) := 0
           || player_ace(table(6)) := no
       END
-    END;
+    END||
     banker_cards(banker) := {}
     || banker_ace := no
     || user_card_values(banker) := 0
