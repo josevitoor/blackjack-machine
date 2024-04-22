@@ -209,25 +209,41 @@ deal_initial_cards =
 
 hit_player(player) =
   PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) <= 21
-  THEN player_cards(player) := player_cards(player) \/ {last(deck)};
-       IF ace: ran(player_cards(player) \/ {last(deck)})
-        THEN player_ace(player) := yes 
-       END;
-       ANY value WHERE value : ran({last(deck)})
-        THEN  user_card_values(player) :=  user_card_values(player) + values(value)
-       END;
+  THEN player_cards(player) := player_cards(player) \/ {last(deck)} ||
+       IF ace: ran({last(deck)})
+        THEN player_ace(player) := yes ||
+          IF user_card_values(player) + 11 <= 21
+          THEN user_card_values(player) := user_card_values(player) + 11
+           ELSE
+             ANY value WHERE value : ran({last(deck)})
+             THEN  user_card_values(player) :=  user_card_values(player) + values(value)
+              END
+            END
+         ELSE
+            ANY value WHERE value : ran({last(deck)})
+            THEN  user_card_values(player) :=  user_card_values(player) + values(value)
+             END
+       END||
         deck := front(deck)
   END;
 
 hit_banker(banker) =
   PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!p . (p : players & card(player_cards(p)) >= 2 => p : stand)) & user_card_values(banker) < 17
   THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)};
-       IF ace: ran(banker_cards(banker) \/ {last(deck)})
-         THEN banker_ace := yes
-        END;
-       ANY value WHERE value : ran({last(deck)})
-        THEN  user_card_values(banker) :=  user_card_values(banker) + values(value)
-       END;
+       IF ace: ran({last(deck)})
+         THEN banker_ace := yes ||
+          IF user_card_values(banker) + 11 <= 21
+          THEN  user_card_values(banker) := user_card_values(banker) + 11
+           ELSE            
+             ANY value WHERE value : ran({last(deck)})
+             THEN  user_card_values(banker) :=  user_card_values(banker) + values(value)
+              END
+           END 
+        ELSE
+          ANY value WHERE value : ran({last(deck)})
+          THEN  user_card_values(banker) :=  user_card_values(banker) + values(value)
+           END
+        END ||
         deck := front(deck)
   END;
 
