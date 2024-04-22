@@ -34,7 +34,7 @@ INVARIANT
   & deck : seq(SUIT * RANK)
   & values : RANK <-> 1..11
   & balance : players --> 0..2*max_balance
-  & player_bet: players --> 0..max_balance
+  & player_bet: players --> 0..2*max_players
   & player_cards : players --> (SUIT<-> RANK)
   & bankers <: USER 
   & banker_cards : bankers --> (SUIT<-> RANK)
@@ -105,16 +105,17 @@ enter_table(player) =
         || user_card_values := user_card_values <+ {player |-> 0}
   END;
 
-exit_table(player) = 
-  PRE player : players & player /: dom(player_bet) & player : ran(table)
-  THEN table := table - [player]  
-        || player_ace  := {player} <<|  player_ace 
-        || stand := stand - {player}
-        || user_card_values := {player} <<|  user_card_values
+exit_table(index) = 
+  PRE table(index) : players & player_bet(table(index)) = 0 & index : NAT1 & index <= size(table)
+  THEN 
+        table := (table /|\ index-1) ^ (table \|/ index)
+        || player_ace  := {table(index)} <<|  player_ace 
+        || stand := stand - {table(index)}
+        || user_card_values := {table(index)} <<|  user_card_values
   END;
 
 bet(player, amount) =
-  PRE  player : players &  balance(player)  - amount >= 0 & amount > 0 & player : ran(table) & player_cards(player) = {} & player /: stand
+  PRE  player : players &  balance(player) - amount >= 0 & amount > 0 & player : ran(table) & player_cards(player) = {} & player /: stand & balance(player) <= max_balance
   THEN player_bet := player_bet  <+ {player |-> amount}  
        || balance := balance  <+ {player |-> balance(player) - amount}
   END;
@@ -124,13 +125,13 @@ deal_initial_cards =
   THEN
     IF player_bet(table(2)) > 0 & player_cards(table(2)) = {}
       THEN 
-        player_cards(table(2)) := player_cards(table(2)) \/  {last(deck)} \/ {deck(size(deck)-1)};
+        player_cards(table(2)) := player_cards(table(2)) \/  {last(deck)} \/ {deck(size(deck)-1)} ||
         IF ace: ran(player_cards(table(2)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(2)) := yes END ||
         ANY first_card WHERE first_card : ran({last(deck)} \/ {deck(size(deck)-1)})
         THEN
           ANY second_card WHERE second_card : ran({last(deck)} \/ {deck(size(deck)-1)}) & first_card /= second_card
              THEN 
-               IF  (values(first_card) = 1 or values(second_card) = 1) & values(first_card) +  values(second_card) + 10 <=21
+               IF player_ace(table(2)) = yes
                THEN user_card_values(table(2)) := values(first_card) +  values(second_card) + 10
                ELSE user_card_values(table(2)) := values(first_card) +  values(second_card)
                END
@@ -142,13 +143,13 @@ deal_initial_cards =
       THEN
         IF player_bet(table(3)) > 0 & player_cards(table(3)) = {}
           THEN 
-            player_cards(table(3)) := player_cards(table(3)) \/  {last(deck)} \/ {deck(size(deck)-1)};
-            IF ace: ran(player_cards(table(3)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(3)) := yes END;
+            player_cards(table(3)) := player_cards(table(3)) \/  {last(deck)} \/ {deck(size(deck)-1)} ||
+            IF ace: ran(player_cards(table(3)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(3)) := yes END ||
             ANY first_card WHERE first_card : ran({last(deck)} \/ {deck(size(deck)-1)})
             THEN
               ANY second_card WHERE second_card : ran({last(deck)} \/ {deck(size(deck)-1)}) & first_card /= second_card
               THEN 
-                IF  (values(first_card) = 1 or values(second_card) = 1) & values(first_card) +  values(second_card) + 10 <=21
+                IF  player_ace(table(3)) = yes
                 THEN user_card_values(table(3)) := values(first_card) +  values(second_card) + 10
                 ELSE user_card_values(table(3)) := values(first_card) +  values(second_card)
                END
@@ -161,13 +162,13 @@ deal_initial_cards =
       THEN
         IF player_bet(table(4)) > 0 & player_cards(table(4)) = {}
           THEN 
-            player_cards(table(4)) := player_cards(table(4)) \/  {last(deck)} \/ {deck(size(deck)-1)};
-            IF ace: ran(player_cards(table(4)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(4)) := yes END;
+            player_cards(table(4)) := player_cards(table(4)) \/  {last(deck)} \/ {deck(size(deck)-1)} ||
+            IF ace: ran(player_cards(table(4)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(4)) := yes END ||
             ANY first_card WHERE first_card : ran({last(deck)} \/ {deck(size(deck)-1)})
             THEN
               ANY second_card WHERE second_card : ran({last(deck)} \/ {deck(size(deck)-1)}) & first_card /= second_card
               THEN 
-                 IF  (values(first_card) = 1 or values(second_card) = 1) & values(first_card) +  values(second_card) + 10 <=21
+                 IF  player_ace(table(4)) = yes
                  THEN user_card_values(table(4)) := values(first_card) +  values(second_card) + 10
                  ELSE user_card_values(table(4)) := values(first_card) +  values(second_card)
                  END
@@ -180,13 +181,13 @@ deal_initial_cards =
       THEN
         IF player_bet(table(5)) > 0 & player_cards(table(5)) = {}
           THEN 
-            player_cards(table(5)) := player_cards(table(5)) \/  {last(deck)} \/ {deck(size(deck)-1)};
-            IF ace: ran(player_cards(table(5)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(5)) := yes END;
+            player_cards(table(5)) := player_cards(table(5)) \/  {last(deck)} \/ {deck(size(deck)-1)} ||
+            IF ace: ran(player_cards(table(5)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(5)) := yes END ||
             ANY first_card WHERE first_card : ran({last(deck)} \/ {deck(size(deck)-1)})
             THEN
               ANY second_card WHERE second_card : ran({last(deck)} \/ {deck(size(deck)-1)}) & first_card /= second_card
               THEN 
-                 IF  (values(first_card) = 1 or values(second_card) = 1) & values(first_card) +  values(second_card) + 10 <=21
+                 IF player_ace(table(5)) = yes
                  THEN user_card_values(table(5)) := values(first_card) +  values(second_card) + 10
                  ELSE user_card_values(table(5)) := values(first_card) +  values(second_card)
                  END
@@ -199,27 +200,27 @@ deal_initial_cards =
       THEN
         IF player_bet(table(6)) > 0 & player_cards(table(6)) = {}
           THEN 
-            player_cards(table(6)) := player_cards(table(6)) \/  {last(deck)} \/ {deck(size(deck)-1)};
-            IF ace: ran(player_cards(table(6)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(6)) := yes END;
+            player_cards(table(6)) := player_cards(table(6)) \/  {last(deck)} \/ {deck(size(deck)-1)} ||
+            IF ace: ran(player_cards(table(6)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN player_ace(table(6)) := yes END ||
             ANY first_card WHERE first_card : ran({last(deck)} \/ {deck(size(deck)-1)})
             THEN
               ANY second_card WHERE second_card : ran({last(deck)} \/ {deck(size(deck)-1)}) & first_card /= second_card
               THEN 
-                 IF  (values(first_card) = 1 or values(second_card) = 1) & values(first_card) +  values(second_card) + 10 <=21
+                 IF  player_ace(table(6)) = yes
                  THEN user_card_values(table(6)) := values(first_card) +  values(second_card) + 10
                  ELSE user_card_values(table(6)) := values(first_card) +  values(second_card)
                  END
               END
-            END;
-            deck := front(front(deck))
+            END
+            || deck := front(front(deck))
         END
     END ||
-    banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)};
-    IF ace: ran(banker_cards(table(1)) \/ {last(deck)} \/ {deck(size(deck)-1)}) THEN banker_ace := yes END;
+    banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)} ||
+    IF ace: ran(banker_cards(table(1)) \/ {last(deck)}) THEN banker_ace := yes END;
      ANY first_card WHERE first_card : ran({last(deck)})
        THEN
-         IF values(first_card) = 1
-         THEN user_card_values(table(1)) := 11
+         IF banker_ace = yes
+         THEN user_card_values(table(1)) := values(first_card) + 10
          ELSE user_card_values(table(1)) :=  values(first_card)
          END
      END ||
@@ -227,36 +228,32 @@ deal_initial_cards =
   END; 
 
 hit_player(player) =
-  PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) <= 21
+  PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) < 21
   THEN player_cards(player) := player_cards(player) \/ {last(deck)} ||
        IF ace: ran({last(deck)})
-        THEN player_ace(player) := yes ||
-          IF user_card_values(player) + 11 <= 21
-          THEN user_card_values(player) := user_card_values(player) + 11
-           ELSE
-             ANY value WHERE value : ran({last(deck)})
-             THEN  user_card_values(player) :=  user_card_values(player) + values(value)
-              END
+        THEN
+          IF player_ace(player) = yes or user_card_values(player) + 11 > 21
+          THEN user_card_values(player) := user_card_values(player) + 1
+           ELSE player_ace(player) := yes 
+                   || user_card_values(player) :=  user_card_values(player) + 11
             END
          ELSE
             ANY value WHERE value : ran({last(deck)})
             THEN  user_card_values(player) :=  user_card_values(player) + values(value)
              END
-       END||
-        deck := front(deck)
+       END
+       || deck := front(deck)
   END;
 
 hit_banker(banker) =
   PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!p . (p : players & card(player_cards(p)) >= 2 => p : stand)) & user_card_values(banker) < 17
   THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)};
-       IF ace: ran({last(deck)}) & banker_ace = no
-         THEN banker_ace := yes ||
-          IF user_card_values(banker) + 11 <= 21
-          THEN  user_card_values(banker) := user_card_values(banker) + 11
-           ELSE            
-             ANY value WHERE value : ran({last(deck)})
-             THEN  user_card_values(banker) :=  user_card_values(banker) + values(value)
-              END
+       IF ace: ran({last(deck)})
+         THEN
+          IF banker_ace = yes or user_card_values(banker) + 11 > 21
+          THEN  user_card_values(banker) := user_card_values(banker) + 1
+           ELSE banker_ace := yes
+                 || user_card_values(banker) :=  user_card_values(banker) + 11
            END 
         ELSE
           ANY value WHERE value : ran({last(deck)})
@@ -279,117 +276,123 @@ stand_banker(banker) =
 result_game(banker) = 
   PRE banker : bankers & banker : stand
   THEN
-    IF user_card_values(table(2)) >= user_card_values(banker) & user_card_values(table(2)) <= 21
-    THEN
-      IF user_card_values(table(2)) = user_card_values(banker)  
-      THEN 
-        balance(table(2)) := balance(table(2)) + player_bet(table(2));
-        player_bet(table(2)) := 0
-      ELSE 
-        balance(table(2)) := balance(table(2)) + (player_bet(table(2)) * 2);
-        player_bet(table(2)) := 0
-      END
-    ELSE 
-      IF user_card_values(table(2)) <= 21 & user_card_values(banker) > 21
-      THEN 
-        balance(table(2)) := balance(table(2)) + (player_bet(table(2)) * 2);
-        player_bet(table(2)) := 0
-      ELSE
-        player_bet(table(2)) := 0
-      END
-    END;
-    player_cards(table(2)) := {}
-    || user_card_values(table(2)) := 0;
+    IF user_card_values(table(2)) > 21
+    THEN  player_bet(table(2)) := 0
+    ELSIF user_card_values(banker) > 21
+    THEN balance(table(2)) := balance(table(2)) + (player_bet(table(2)) * 2) 
+      || player_bet(table(2)) := 0
+    ELSIF  user_card_values(table(2)) >  user_card_values(banker)
+    THEN balance(table(2)) := balance(table(2)) + (player_bet(table(2)) * 2) 
+      || player_bet(table(2)) := 0
+    ELSIF user_card_values(table(2)) =  user_card_values(banker)
+    THEN balance(table(2)) := balance(table(2)) + player_bet(table(2))
+      || player_bet(table(2)) := 0
+    ELSIF user_card_values(table(2)) <  user_card_values(banker)
+    THEN player_bet(table(2)) := 0
+    END
+    || player_cards(table(2)) := {}
+    || user_card_values(table(2)) := 0
+    || player_ace(table(2)) := no;
     IF size(table) > 2
     THEN
       IF card(player_cards(table(3))) >= 2
       THEN
-        IF user_card_values(table(3)) >= user_card_values(banker) & user_card_values(table(3)) <= 21
-        THEN
-          IF user_card_values(table(3)) = user_card_values(banker)  
-          THEN 
-            balance(table(3)) := balance(table(3)) + player_bet(table(3));
-            player_bet(table(3)) := 0
-          ELSE 
-            balance(table(3)) := balance(table(3)) + (player_bet(table(3)) * 2);
-            player_bet(table(3)) := 0
-          END
-        ELSE 
-          player_bet(table(3)) := 0
-        END;
-        player_cards(table(3)) := {}
-        || user_card_values(table(3)) := 0
+        IF user_card_values(table(3)) > 21
+        THEN player_bet(table(3)) := 0
+        ELSIF user_card_values(banker) > 21
+        THEN balance(table(3)) := balance(table(3)) + (player_bet(table(3)) * 2) 
+          || player_bet(table(2)) := 0
+        ELSIF  user_card_values(table(3)) >  user_card_values(banker)
+        THEN balance(table(3)) := balance(table(3)) + (player_bet(table(3)) * 2) 
+          || player_bet(table(3)) := 0
+        ELSIF user_card_values(table(3)) =  user_card_values(banker)
+        THEN balance(table(3)) := balance(table(3)) + player_bet(table(3))
+          || player_bet(table(3)) := 0
+        ELSIF user_card_values(table(2)) <  user_card_values(banker)
+        THEN player_bet(table(3)) := 0
+        END
+          || player_cards(table(3)) := {}
+          || user_card_values(table(3)) := 0
+          || player_ace(table(3)) := no
       END
     END;
-    IF size(table) > 3
+     IF size(table) > 3
     THEN
       IF card(player_cards(table(4))) >= 2
       THEN
-        IF user_card_values(table(4)) >= user_card_values(banker) & user_card_values(table(4)) <= 21
-        THEN
-          IF user_card_values(table(4)) = user_card_values(banker)  
-          THEN 
-            balance(table(4)) := balance(table(4)) + player_bet(table(4));
-            player_bet(table(4)) := 0
-          ELSE 
-            balance(table(4)) := balance(table(4)) + (player_bet(table(4)) * 2);
-            player_bet(table(4)) := 0
-          END
-        ELSE 
-          player_bet(table(4)) := 0
-        END;
-        player_cards(table(4)) := {}
-        || user_card_values(table(4)) := 0
+        IF user_card_values(table(4)) > 21
+        THEN player_bet(table(4)) := 0
+        ELSIF user_card_values(banker) > 21
+        THEN balance(table(4)) := balance(table(4)) + (player_bet(table(4)) * 2) 
+          || player_bet(table(4)) := 0
+        ELSIF  user_card_values(table(4)) >  user_card_values(banker)
+        THEN balance(table(4)) := balance(table(4)) + (player_bet(table(4)) * 2) 
+          || player_bet(table(4)) := 0
+        ELSIF user_card_values(table(4)) =  user_card_values(banker)
+        THEN balance(table(4)) := balance(table(4)) + player_bet(table(4))
+          || player_bet(table(4)) := 0
+        ELSIF user_card_values(table(4)) <  user_card_values(banker)
+        THEN player_bet(table(4)) := 0
+        END
+          || player_cards(table(4)) := {}
+          || user_card_values(table(4)) := 0
+          || player_ace(table(4)) := no
       END
     END;
     IF size(table) > 4
     THEN
       IF card(player_cards(table(5))) >= 2
       THEN
-        IF user_card_values(table(5)) >= user_card_values(banker) & user_card_values(table(5)) <= 21
-        THEN
-          IF user_card_values(table(5)) = user_card_values(banker)  
-          THEN 
-            balance(table(5)) := balance(table(5)) + player_bet(table(5));
-            player_bet(table(5)) := 0
-          ELSE 
-            balance(table(5)) := balance(table(5)) + (player_bet(table(5)) * 2);
-            player_bet(table(5)) := 0
-          END
-        ELSE 
-          player_bet(table(5)) := 0
-        END;
-        player_cards(table(5)) := {}
-        || user_card_values(table(5)) := 0
+        IF user_card_values(table(5)) > 21
+        THEN player_bet(table(5)) := 0
+        ELSIF user_card_values(banker) > 21
+        THEN balance(table(5)) := balance(table(5)) + (player_bet(table(5)) * 2) 
+          || player_bet(table(5)) := 0
+        ELSIF  user_card_values(table(5)) >  user_card_values(banker)
+        THEN balance(table(5)) := balance(table(5)) + (player_bet(table(5)) * 2) 
+          || player_bet(table(5)) := 0
+        ELSIF user_card_values(table(5)) =  user_card_values(banker)
+        THEN balance(table(5)) := balance(table(5)) + player_bet(table(5))
+          || player_bet(table(5)) := 0
+        ELSIF user_card_values(table(5)) <  user_card_values(banker)
+        THEN player_bet(table(5)) := 0
+        END
+          || player_cards(table(5)) := {}
+          || user_card_values(table(5)) := 0
+          || player_ace(table(5)) := no
       END
     END;
     IF size(table) > 5
     THEN
       IF card(player_cards(table(6))) >= 2
       THEN
-        IF user_card_values(table(6)) >= user_card_values(banker) & user_card_values(table(6)) <= 21
-        THEN
-          IF user_card_values(table(6)) = user_card_values(banker)  
-          THEN 
-            balance(table(6)) := balance(table(6)) + player_bet(table(6));
-            player_bet(table(6)) := 0
-          ELSE 
-            balance(table(6)) := balance(table(6)) + (player_bet(table(6)) * 2);
-            player_bet(table(6)) := 0
-          END
-        ELSE 
-          player_bet(table(6)) := 0
-        END;
-        player_cards(table(6)) := {}
-        || user_card_values(table(6)) := 0
+        IF user_card_values(table(6)) > 21
+        THEN player_bet(table(6)) := 0
+        ELSIF user_card_values(banker) > 21
+        THEN balance(table(6)) := balance(table(6)) + (player_bet(table(6)) * 2) 
+          || player_bet(table(6)) := 0
+        ELSIF  user_card_values(table(6)) >  user_card_values(banker)
+        THEN balance(table(6)) := balance(table(6)) + (player_bet(table(6)) * 2) 
+          || player_bet(table(6)) := 0
+        ELSIF user_card_values(table(6)) =  user_card_values(banker)
+        THEN balance(table(6)) := balance(table(6)) + player_bet(table(6))
+          || player_bet(table(6)) := 0
+        ELSIF user_card_values(table(6)) <  user_card_values(banker)
+        THEN player_bet(table(6)) := 0
+        END
+          || player_cards(table(6)) := {}
+          || user_card_values(table(6)) := 0
+          || player_ace(table(6)) := no
       END
     END;
     banker_cards(banker) := {}
+    || banker_ace := no
     || user_card_values(banker) := 0
+    || stand := {}
   END;
 
 initialize_custom_deck =
-  PRE size(table) > 1 & size(deck) = 0 & (#p . (p: players & player_bet(p) > 0))
+  PRE size(table) > 1 & size(deck) < 20 & (#p . (p: players & player_bet(p) > 0))
   THEN deck := 
         [hearts|->eight, spades|->ace, diamonds|->seven, spades|->jack, clubs|->queen,
         hearts|->three, spades|->five, diamonds|->king, clubs|->ace, diamonds|->jack,
