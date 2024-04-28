@@ -26,7 +26,11 @@ VARIABLES
    stand, 
    values, 
    user_card_values,
-   playing
+   playing,
+   winners,
+   losers,
+   winners_pos,
+   losers_pos
 
 INVARIANT
    players <: USER 
@@ -48,6 +52,11 @@ INVARIANT
    & user_card_values : USER <-> 0..30
    & !uu . (uu: dom(user_card_values)  => uu:ran(table))
    & playing <: players
+   & winners: 0..4 +-> USER
+   & losers: 0..4 +-> USER
+   & !uu . (uu: playing  => uu:ran(table))
+   & winners_pos: 0..4
+   & losers_pos: 0..4
 
 INITIALISATION 
    balance :=  USER * {} 
@@ -64,6 +73,10 @@ INITIALISATION
    || values := {ace |->1, two |-> 2, three |-> 3, four |-> 4, five |-> 5, six |-> 6, seven |-> 7, eight |-> 8, nine |-> 9, ten |-> 10, jack |-> 10, queen |-> 10, king |-> 10}
    || user_card_values := USER * {} 
    || playing := {}
+   || winners := {0} * {}
+   || losers := {0} * {}
+   || winners_pos := 0
+   || losers_pos := 0
 
 OPERATIONS
 add_player(player) =
@@ -102,7 +115,7 @@ initialize_table_with_banker(banker) =
   END;
 
 enter_table(player) =
-   PRE  player : players & size(table) < 6 & size(table) > 0 & player /: ran(table)
+   PRE  player : players & size(table) < 6 & size(table) > 0 & player /: ran(table) & card(playing) = 0
    THEN table := table ^ [player] 
       || player_ace := player_ace <+ {player |-> no} 
       || user_card_values := user_card_values <+ {player |-> 0}
@@ -154,6 +167,10 @@ deal_initial_banker_cards =
          END
       END 
       || deck := front(deck)
+      || winners := {0} * {}
+      || losers := {0} * {}
+      || winners_pos := 0
+      || losers_pos := 0
    END; 
 
 hit_player(player) =
@@ -206,18 +223,20 @@ check_player_result(index, banker) =
    PRE index : NAT1 & index > 1 & index <= 6 & banker : bankers & banker : stand
    THEN
       IF user_card_values(table(index)) > 21
-      THEN  player_bet(table(index)) := 0
+      THEN  player_bet(table(index)) := 0  || IF table(index) /: ran(losers) THEN  losers(losers_pos) := table(index)  || losers_pos := losers_pos + 1 END
       ELSIF user_card_values(banker) > 21
       THEN balance(table(index)) := balance(table(index)) + (player_bet(table(index)) * 2) 
          || player_bet(table(index)) := 0
+         || IF table(index) /: ran(winners) THEN winners(winners_pos) := table(index)  || winners_pos := winners_pos + 1 END
       ELSIF  user_card_values(table(index)) >  user_card_values(banker)
       THEN balance(table(index)) := balance(table(index)) + (player_bet(table(index)) * 2) 
          || player_bet(table(index)) := 0
+         || IF table(index) /: ran(winners) THEN winners(winners_pos) := table(index)  || winners_pos := winners_pos + 1 END
       ELSIF user_card_values(table(index)) =  user_card_values(banker)
       THEN balance(table(index)) := balance(table(index)) + player_bet(table(index))
          || player_bet(table(index)) := 0
       ELSIF user_card_values(table(index)) <  user_card_values(banker)
-      THEN player_bet(table(index)) := 0
+      THEN player_bet(table(index)) := 0 || IF table(index) /: ran(losers) THEN  losers(losers_pos) := table(index)  || losers_pos := losers_pos + 1 END
       END
       || player_cards(table(index)) := {}
       || user_card_values(table(index)) := 0
@@ -246,6 +265,16 @@ shuffle_deck =
          spades|->seven, clubs|->five, hearts|->five, diamonds|->four, spades|->ten,
          hearts|->nine, spades|->eight, clubs|->two, diamonds|->five, spades|->queen,
          hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
-   END
+   END;
+
+ww <-- show_winners = 
+PRE card(playing) = 0
+THEN ww := winners
+END;
+
+ll <-- show_losers = 
+PRE card(playing) = 0
+THEN ll := losers
+END
 
 END

@@ -1,0 +1,20 @@
+digraph g {
+rankdir=RL;
+    Noderoot [label="&and;\nfalse", shape="rect", fillcolor="tomato", style="filled,rounded"]
+    Node1 [label="=\ntrue\ncard(playing) = 0", shape="rect", fillcolor="olivedrab2", style="filled,rounded"]
+        Node1 -> Noderoot;
+    Node2 [label="card|0", shape="record", fillcolor="white", style="filled"]
+        Node2 -> Node1;
+    Node3 [label="playing|&empty;", shape="record", fillcolor="white", style="filled"]
+        Node3 -> Node2;
+    Node4 [label="0", shape="record", fillcolor="white", style="filled"]
+        Node4 -> Node1;
+    Node5 [label="=\nfalse\nsize(table) = 0", shape="rect", fillcolor="tomato", style="filled,rounded"]
+        Node5 -> Noderoot;
+    Node6 [label="size|1", shape="record", fillcolor="white", style="filled"]
+        Node6 -> Node5;
+    Node7 [label="table|\{(1&#8614;USER2)\}", shape="record", fillcolor="white", style="filled"]
+        Node7 -> Node6;
+    Node8 [label="0", shape="record", fillcolor="white", style="filled"]
+        Node8 -> Node5;
+}
