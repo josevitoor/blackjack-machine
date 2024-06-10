@@ -39,7 +39,7 @@ INVARIANT
    & deck : seq(SUIT * RANK)
    & values : RANK <-> 1..11
    & balance : players --> 0..2*max_balance
-   & player_bet: players --> 0..2*max_players
+   & player_bet: players --> 0..2*max_balance
    & player_cards : players --> (SUIT <-> RANK)
    & bankers <: USER 
    & banker_cards : bankers --> (SUIT <-> RANK)
@@ -88,7 +88,7 @@ add_player(player) =
    END;
 
 remove_player(player) =
-   PRE  player : players & player_bet(player) = 0 & player /: ran(table) & balance(player) = 0
+   PRE  player : USER & player : players & player_bet(player) = 0 & player /: ran(table) & balance(player) = 0
    THEN balance := {player} <<|  balance 
       || players := players - {player} 
       || player_cards := {player} <<|  player_cards
@@ -96,12 +96,12 @@ remove_player(player) =
    END;
 
 add_balance(player, amount) =
-   PRE player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance & player_bet(player) = 0
+   PRE player : USER & player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance & player_bet(player) = 0
    THEN balance(player) := balance(player) + amount
    END;
 
 remove_balance(player, amount) =
-  PRE player : players & amount : NAT1 & player : dom(balance) & balance(player) - amount >= 0
+  PRE player : USER & player : players & amount : NAT1 & player : dom(balance) & balance(player) - amount >= 0
   THEN balance(player) := balance(player) - amount 
    END;
 
@@ -115,7 +115,7 @@ initialize_table_with_banker(banker) =
   END;
 
 enter_table(player) =
-   PRE  player : players & size(table) < 6 & size(table) > 0 & player /: ran(table) & card(playing) = 0
+   PRE  player : USER & player : players & size(table) < 6 & size(table) > 0 & player /: ran(table) & card(playing) = 0
    THEN table := table ^ [player] 
       || player_ace := player_ace <+ {player |-> no} 
       || user_card_values := user_card_values <+ {player |-> 0}
@@ -130,7 +130,7 @@ exit_table(index) =
    END;
 
 bet(player, amount) =
-   PRE  player : players & amount : NAT1 & balance(player) - amount >= 0 & player : ran(table) & player_cards(player) = {} & player /: stand & balance(player) <= max_balance & player /: playing
+   PRE  player : USER & player : players & amount : NAT1 & balance(player) - amount >= 0 & player : ran(table) & player_cards(player) = {} & player /: stand & balance(player) <= max_balance & player /: playing
    THEN player_bet := player_bet  <+ {player |-> amount}  
       || balance := balance  <+ {player |-> balance(player) - amount}
    END;
@@ -174,7 +174,7 @@ deal_initial_banker_cards =
    END; 
 
 hit_player(player) =
-   PRE player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) < 21 & banker_cards(table(1)) /= {}
+   PRE player : USER & player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) < 21 & banker_cards(table(1)) /= {}
    THEN player_cards(player) := player_cards(player) \/ {last(deck)} ||
       IF ace: ran({last(deck)})
       THEN
@@ -192,7 +192,7 @@ hit_player(player) =
   END;
 
 hit_banker(banker) =
-   PRE banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!pp . (pp : players & card(player_cards(pp)) >= 2 => pp : stand)) & user_card_values(banker) < 17
+   PRE banker : USER & banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!pp . (pp : players & card(player_cards(pp)) >= 2 => pp : stand)) & user_card_values(banker) < 17
    THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)}||
       IF ace: ran({last(deck)})
       THEN
@@ -210,17 +210,17 @@ hit_banker(banker) =
    END;
 
 stand_player(player) =
-   PRE player : players & player: ran(table) & card(player_cards(player)) >= 2 & player /: stand & banker_cards(table(1)) /= {}
+   PRE player : USER & player : players & player: ran(table) & card(player_cards(player)) >= 2 & player /: stand & banker_cards(table(1)) /= {}
    THEN stand := stand \/ {player}
    END;
 
 stand_banker(banker) =
-   PRE banker: bankers & card(banker_cards(banker)) >= 2 & banker /: stand & user_card_values(banker) >= 17
+   PRE banker : USER & banker: bankers & card(banker_cards(banker)) >= 2 & banker /: stand & user_card_values(banker) >= 17
    THEN stand := stand \/ {banker}
    END;
 
 check_player_result(index, banker) = 
-   PRE index : NAT1 & index > 1 & index <= 6 & banker : bankers & banker : stand
+   PRE index : NAT1 & index > 1 & index <= 6 & banker : USER & banker : bankers & banker : stand
    THEN
       IF user_card_values(table(index)) > 21
       THEN  player_bet(table(index)) := 0  || IF table(index) /: ran(losers) THEN  losers(losers_pos) := table(index)  || losers_pos := losers_pos + 1 END
@@ -245,7 +245,7 @@ check_player_result(index, banker) =
    END;
 
 end_game(banker) = 
-   PRE banker : bankers & banker : stand & (!pp . (pp : players => pp /: stand))
+   PRE banker : USER & banker : bankers & banker : stand & (!pp . (pp : players => pp /: stand))
    THEN banker_cards(banker) := {}
       || banker_ace := no
       || user_card_values(banker) := 0
