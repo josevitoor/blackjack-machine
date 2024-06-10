@@ -1,0 +1,85 @@
+/* BlackJackR1
+ * Author: rodrigo.rocha.103
+ * Creation date: 10/06/2024
+ */
+
+REFINEMENT BlackJackR
+REFINES BlackJack
+
+VARIABLES
+  players_r, 
+  players_count
+
+INVARIANT
+    players_r : 0..max_players --> USER
+    & players_count : 0..max_players
+    & players = {player | player:USER & !ii.(ii : 0..players_count => player = players_r(ii))}
+    & card(players) = players_count
+
+INITIALISATION 
+    players_r := (0..max_players) * {};
+    players_count := 0
+
+
+OPERATIONS
+
+add_player(player) =
+    BEGIN
+        players_r(players_count) := player;
+        players_count := players_count + 1
+    END;
+    
+remove_player(player) =
+    BEGIN
+        players_r(players_r~(player)) := players_r(players_count);
+        players_count := players_count -1
+    END;
+
+add_balance(player, amount) =
+    skip;
+remove_balance(player, amount) =
+    skip;
+initialize_table_with_banker(banker) = 
+    skip;
+
+enter_table(player) =
+    skip;
+
+exit_table(index) = 
+    skip;
+
+bet(player, amount) =
+    skip;
+
+deal_initial_player_cards(index) = 
+    skip;
+
+deal_initial_banker_cards = 
+    skip;
+hit_player(player) =
+    skip;
+
+hit_banker(banker) =
+    skip;
+stand_player(player) =
+    skip;
+
+stand_banker(banker) =
+    skip;
+
+check_player_result(index, banker) = 
+    skip;
+
+end_game(banker) = 
+    skip;
+
+shuffle_deck =
+    skip;
+
+ww <-- show_winners = 
+    skip;
+
+ll <-- show_losers = 
+    skip
+
+END
