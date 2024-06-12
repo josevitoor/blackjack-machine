@@ -1,38 +1,64 @@
-/* BlackJackR1
- * Author: rodrigo.rocha.103
- * Creation date: 10/06/2024
- */
-
 REFINEMENT BlackJackR
 REFINES BlackJack
 
 VARIABLES
   players_r, 
-  players_count
+  players_counter,
+  table_r,
+  table_counter,
+  deck_r,
+  player_bet_r,
+  player_balance_r,
+  player_cards_r,
+  bankers_r
 
 INVARIANT
     players_r : 0..max_players --> USER
-    & players_count : 0..max_players
-    & players = {player | player:USER & !ii.(ii : 0..players_count => player = players_r(ii))}
-    & card(players) = players_count
+    & players_counter : 0..max_players
+    & players = ran(0..players_counter <| players_r)
+    & card(players) = players_counter
+    
+    & table_r : 0..6 --> USER
+    & table_counter : 0..6
+    & table = (0..6) <| table_r
+    & size(table) = table_counter
+    
+    & deck_r : 0..51 >->> SUIT * RANK
+    & deck = (0..51) <| deck_r
+    
+    & player_bet_r : 0..max_players --> 0..2*max_balance
+    & ran(player_bet) = ran(0..2*max_balance <| player_bet_r)
+    
+    & player_balance_r : 0..max_players --> 0..2*max_balance
+    & ran(balance) = ran(0..2*max_balance <| player_bet_r)
+    
+    & player_cards_r : 0..max_players --> (0..11 >->> SUIT * RANK)
+    
+    & bankers_r : 0..0 --> USER
+    & bankers = ran(0..0 <| bankers_r)
 
 INITIALISATION 
     players_r := (0..max_players) * {};
-    players_count := 0
-
-
+    players_counter := 0;
+    table_r := (0..6) * {};
+    table_counter := 0;
+    deck_r := (0..51) * {};
+    player_bet_r := (0..max_players) * {0};
+    player_balance_r := (0..max_players) * {0};
+    player_cards_r := (0..max_players) * {(0..11)*{}};
+    bankers_r := (0..0) * {}
+    
 OPERATIONS
-
 add_player(player) =
     BEGIN
-        players_r(players_count) := player;
-        players_count := players_count + 1
+        players_r(players_counter) := player;
+        players_counter := players_counter + 1
     END;
     
 remove_player(player) =
     BEGIN
-        players_r(players_r~(player)) := players_r(players_count);
-        players_count := players_count -1
+        players_r(players_r~(player)) := players_r(players_counter);
+        players_counter := players_counter -1
     END;
 
 add_balance(player, amount) =
@@ -43,10 +69,16 @@ initialize_table_with_banker(banker) =
     skip;
 
 enter_table(player) =
-    skip;
+    BEGIN
+       table_counter := table_counter + 1;
+       table_r(table_counter) := player
+    END;
 
 exit_table(index) = 
-    skip;
+    BEGIN
+       table_r(index) := table_r(table_counter);
+       table_counter := table_counter - 1
+    END;
 
 bet(player, amount) =
     skip;
