@@ -37,7 +37,7 @@ INVARIANT
    & table : seq(USER)
    & size(table) <= 6
    & deck : seq(SUIT * RANK)
-   & values : RANK <-> 1..11
+   & values : RANK --> 1..10
    & balance : players --> 0..2*max_balance
    & player_bet: players --> 0..2*max_balance
    & player_cards : players --> (SUIT <-> RANK)
