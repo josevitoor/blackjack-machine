@@ -65,6 +65,7 @@ INITIALISATION
     winners_counter := 0
     
 OPERATIONS
+    
 add_player(player) =
     BEGIN
         players_r(players_counter) := player;
@@ -79,8 +80,10 @@ remove_player(player) =
 
 add_balance(player, amount) =
     skip;
+    
 remove_balance(player, amount) =
     skip;
+    
 initialize_table_with_banker(banker) = 
     skip;
 
@@ -104,6 +107,7 @@ deal_initial_player_cards(index) =
 
 deal_initial_banker_cards = 
     skip;
+    
 hit_player(player) =
     skip;
 

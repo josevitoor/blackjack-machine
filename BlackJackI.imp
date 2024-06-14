@@ -1,16 +1,10 @@
-MACHINE BlackJack
+/* BlackJackI
+ * Author: rodri
+ * Creation date: 14/06/2024
+ */
 
-SETS 
-   USER;
-   SUIT = {clubs, diamonds, hearts, spades};
-   RANK = {ace, two, three, four, five, six, seven, eight, nine, ten, jack, queen, king};
-   ACE = {yes, no}
-
-CONSTANTS 
-   max_balance, max_players
-
-PROPERTIES
-   max_balance:NAT1 & max_players:NAT1
+IMPLEMENTATION BlackJackI
+REFINES BlackJack
 
 VARIABLES
    balance, 
@@ -33,31 +27,6 @@ VARIABLES
    losers_pos
    
 
-INVARIANT
-   players <: USER 
-   & table : seq(USER)
-   & size(table) <= 6
-   & deck : seq(SUIT * RANK)
-   & values : RANK --> 1..10
-   & balance : players --> 0..2*max_balance
-   & player_bet: players --> 0..2*max_balance
-   & player_cards : players --> (SUIT <-> RANK)
-   & bankers <: USER 
-   & banker_cards : bankers --> (SUIT <-> RANK)
-   & card(bankers) <= 1
-   & player_ace: players +-> ACE
-   & stand <: USER 
-   & banker_ace: ACE
-   & players /\ bankers = {}
-   & !uu . (uu: stand => uu:ran(table))
-   & user_card_values : USER <-> 0..30
-   & !uu . (uu: dom(user_card_values)  => uu:ran(table))
-   & playing <: players
-   & winners: 0..4 +-> USER
-   & losers: 0..4 +-> USER
-   & !uu . (uu: playing  => uu:ran(table))
-   & winners_pos: 0..4
-   & losers_pos: 0..4
 
 INITIALISATION 
    balance :=  USER * {} 
@@ -79,6 +48,7 @@ INITIALISATION
    || winners_pos := 0
    || losers_pos := 0
 
+
 OPERATIONS
 add_player(player) =
    PRE player : USER & player /: bankers & player /: players & card(players) < max_players
@@ -88,6 +58,7 @@ add_player(player) =
       || player_bet := player_bet <+ {player |-> 0}
    END;
 
+
 remove_player(player) =
    PRE  player : USER & player : players & player_bet(player) = 0 & player /: ran(table) & balance(player) = 0
    THEN balance := {player} <<|  balance 
@@ -96,15 +67,18 @@ remove_player(player) =
       || player_bet := {player} <<|  player_bet
    END;
 
+
 add_balance(player, amount) =
    PRE player : USER & player : players & amount: NAT1 & player : dom(balance) & balance(player) + amount <= max_balance & player_bet(player) = 0
    THEN balance(player) := balance(player) + amount
    END;
 
+
 remove_balance(player, amount) =
   PRE player : USER & player : players & amount : NAT1 & player : dom(balance) & balance(player) - amount >= 0
   THEN balance(player) := balance(player) - amount 
    END;
+
 
 initialize_table_with_banker(banker) = 
    PRE banker : USER & banker /: players & size(table) = 0
@@ -115,12 +89,14 @@ initialize_table_with_banker(banker) =
       || user_card_values := user_card_values <+ {banker |-> 0}
   END;
 
+
 enter_table(player) =
    PRE  player : USER & player : players & size(table) < 6 & size(table) > 0 & player /: ran(table) & card(playing) = 0
    THEN table := table ^ [player] 
       || player_ace := player_ace <+ {player |-> no} 
       || user_card_values := user_card_values <+ {player |-> 0}
    END;
+
 
 exit_table(index) = 
    PRE index : NAT1 & index > 1 & index <= size(table) & table(index) : players & player_bet(table(index)) = 0 & table(index) /: playing
@@ -130,11 +106,13 @@ exit_table(index) =
       || user_card_values := {table(index)} <<|  user_card_values
    END;
 
+
 bet(player, amount) =
    PRE  player : USER & player : players & amount : NAT1 & balance(player) - amount >= 0 & player : ran(table) & player_cards(player) = {} & player /: stand & balance(player) <= max_balance & player /: playing
    THEN player_bet := player_bet  <+ {player |-> amount}  
       || balance := balance  <+ {player |-> balance(player) - amount}
    END;
+
 
 deal_initial_player_cards(index) = 
    PRE index : NAT1 & index > 1 & index <= size(table) & table(index) : players & (size(deck) >= 2 * size(table)) & (#pp . (pp: players & player_bet(pp) > 0)) & banker_cards(table(1)) = {} & player_cards(table(index)) = {}
@@ -156,6 +134,7 @@ deal_initial_player_cards(index) =
       || deck := deck /|\ (size(deck) -2)
    END;
 
+
 deal_initial_banker_cards = 
    PRE size(deck) > 0 & (#pp . (pp: players & player_bet(pp) > 0)) & (!pp . (pp: players & player_bet(pp) > 0 => card(player_cards(pp)) = 2)) & banker_cards(table(1)) = {}
    THEN banker_cards(table(1)) := banker_cards(table(1)) \/  {last(deck)} ||
@@ -172,7 +151,8 @@ deal_initial_banker_cards =
       || losers := {0} * {}
       || winners_pos := 0
       || losers_pos := 0
-   END; 
+   END;
+ 
 
 hit_player(player) =
    PRE player : USER & player : players  & size(deck) > 0 & player : ran(table) & player_bet(player) > 0  & card(player_cards(player)) > 0 & player /: stand & user_card_values(player) < 21 & banker_cards(table(1)) /= {}
@@ -192,6 +172,7 @@ hit_player(player) =
       || deck := front(deck)
   END;
 
+
 hit_banker(banker) =
    PRE banker : USER & banker : bankers & size(deck) > 0 & banker : ran(table) & card(banker_cards(banker)) > 0 & banker /: stand & (!pp . (pp : players & card(player_cards(pp)) >= 2 => pp : stand)) & user_card_values(banker) < 17
    THEN banker_cards(banker) := banker_cards(banker) \/ {last(deck)}||
@@ -210,15 +191,18 @@ hit_banker(banker) =
       || deck := front(deck) 
    END;
 
+
 stand_player(player) =
    PRE player : USER & player : players & player: ran(table) & card(player_cards(player)) >= 2 & player /: stand & banker_cards(table(1)) /= {}
    THEN stand := stand \/ {player}
    END;
 
+
 stand_banker(banker) =
    PRE banker : USER & banker: bankers & card(banker_cards(banker)) >= 2 & banker /: stand & user_card_values(banker) >= 17
    THEN stand := stand \/ {banker}
    END;
+
 
 check_player_result(index, banker) = 
    PRE index : NAT1 & index > 1 & index <= 6 & banker : USER & banker : bankers & banker : stand
@@ -245,6 +229,7 @@ check_player_result(index, banker) =
       || stand := stand - {table(index)}
    END;
 
+
 end_game(banker) = 
    PRE banker : USER & banker : bankers & banker : stand & (!pp . (pp : players => pp /: stand))
    THEN banker_cards(banker) := {}
@@ -253,6 +238,7 @@ end_game(banker) =
       || stand := {}
       || playing := {}
    END;
+
 
 shuffle_deck =
    PRE size(table) > 1 & size(deck) <=  26 & (#pp . (pp: players & player_bet(pp) > 0))
@@ -268,14 +254,16 @@ shuffle_deck =
          hearts|->ace, clubs|->ten, diamonds|->nine, spades|->king, clubs|->three]
    END;
 
+
 ww <-- show_winners = 
 PRE card(playing) = 0
 THEN ww := winners
 END;
+
 
 ll <-- show_losers = 
 PRE card(playing) = 0
 THEN ll := losers
 END
 
-END
+ END
