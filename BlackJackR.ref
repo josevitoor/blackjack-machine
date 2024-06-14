@@ -14,7 +14,8 @@ VARIABLES
   stand_r,
   stand_counter,
   winners_r,
-  winners_counter
+  winners_counter,
+  banker_ace_r
 
 INVARIANT
     players_r : 0..max_players --> USER
@@ -30,14 +31,19 @@ INVARIANT
     & deck_r : 0..51 >->> SUIT * RANK
     & deck = (0..51) <| deck_r
     
-    & player_bet_r = player_bet
+    & player_bet_r : USER --> 0..2*max_balance
+    & player_bet = player_bet_r
     
-    & player_balance_r = balance
+    & player_balance_r : USER --> 0..2*max_balance
+    & balance = player_balance_r
     
     & player_cards_r : 0..max_players --> (0..11 >->> SUIT * RANK)
     
     & bankers_r : 0..0 --> USER
     & bankers = ran(0..0 <| bankers_r)
+    
+    & banker_ace_r : ACE
+    & banker_ace = banker_ace_r
     
     & stand_r : 0..max_players+1 --> USER
     & stand_counter : 0..max_players+1
@@ -59,6 +65,7 @@ INITIALISATION
     player_balance_r := USER * {0};
     player_cards_r := (0..max_players) * {(0..11)*{}};
     bankers_r := (0..0) * {};
+    banker_ace_r := no;
     stand_r := (0..max_players+1) * {};
     stand_counter := 0;
     winners_r := (0..max_players+1) * {};
@@ -69,23 +76,39 @@ OPERATIONS
 add_player(player) =
     BEGIN
         players_r(players_counter) := player;
-        players_counter := players_counter + 1
+        players_counter := players_counter + 1;
+        player_balance_r := player_balance_r <+ {player |-> 0};
+        player_bet_r := player_bet_r <+ {player |-> 0}
+        // player_cards := player_cards \/ { player |-> {} } 
     END;
     
 remove_player(player) =
     BEGIN
         players_r(players_r~(player)) := players_r(players_counter);
-        players_counter := players_counter -1
+        players_counter := players_counter -1;
+        player_balance_r := {player} <<| player_balance_r;
+        player_bet_r := {player} <<|  player_bet_r
+        //player_cards := {player} <<|  player_cards
     END;
 
 add_balance(player, amount) =
-    skip;
+    player_balance_r(player) := player_balance_r(player) + amount;
     
 remove_balance(player, amount) =
-    skip;
+    player_balance_r(player) := player_balance_r(player) - amount;
     
-initialize_table_with_banker(banker) = 
-    skip;
+initialize_table_with_banker(banker) =
+    BEGIN   
+        bankers_r(0) := banker;
+        banker_ace_r := no
+    END;
+    /*
+     * bankers := {banker} 
+     * || table := table ^ [banker]
+     * || banker_ace := no
+     * || banker_cards := banker_cards \/ { banker |-> {} } 
+     * || user_card_values := user_card_values <+ {banker |-> 0}
+     */
 
 enter_table(player) =
     BEGIN

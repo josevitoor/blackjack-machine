@@ -1,0 +1,121 @@
+/* BlackJackR_I
+ * Author: rodri
+ * Creation date: 14/06/2024
+ */
+
+IMPLEMENTATION BlackJackR_I
+REFINES BlackJackR
+
+
+
+CONCRETE_VARIABLES
+  players_r, 
+  players_counter,
+  table_r,
+  table_counter,
+  deck_r,
+  player_bet_r,
+  player_balance_r,
+  player_cards_r,
+  bankers_r,
+  stand_r,
+  stand_counter,
+  winners_r,
+  winners_counter
+  
+  
+VALUES
+    USER=0..200;
+    max_balance=100; 
+    max_players=50
+
+
+INITIALISATION 
+    players_r := (0..max_players) * {};
+    players_counter := 0;
+    table_r := (0..6) * {};
+    table_counter := 0;
+    deck_r := (0..51) * {};
+    player_bet_r := USER * {0};
+    player_balance_r := USER * {0};
+    player_cards_r := (0..max_players) * {(0..11)*{}};
+    bankers_r := (0..0) * {};
+    stand_r := (0..max_players+1) * {};
+    stand_counter := 0;
+    winners_r := (0..max_players+1) * {};
+    winners_counter := 0
+    
+
+OPERATIONS
+add_player(player) =
+    BEGIN
+        players_r(players_counter) := player;
+        players_counter := players_counter + 1
+    END;
+
+    
+remove_player(player) =
+    BEGIN
+        players_r(players_r~(player)) := players_r(players_counter);
+        players_counter := players_counter -1
+    END;
+
+
+add_balance(player, amount) =
+    skip;
+    
+remove_balance(player, amount) =
+    skip;
+    
+initialize_table_with_banker(banker) = 
+    skip;
+
+enter_table(player) =
+    BEGIN
+       table_counter := table_counter + 1;
+       table_r(table_counter) := player
+    END;
+
+
+exit_table(index) = 
+    BEGIN
+       table_r(index) := table_r(table_counter);
+       table_counter := table_counter - 1
+    END;
+
+bet(player, amount) =
+    skip;
+
+deal_initial_player_cards(index) = 
+    skip;
+
+deal_initial_banker_cards = 
+    skip;
+    
+hit_player(player) =
+    skip;
+
+hit_banker(banker) =
+    skip;
+stand_player(player) =
+    skip;
+
+stand_banker(banker) =
+    skip;
+
+check_player_result(index, banker) = 
+    skip;
+
+end_game(banker) = 
+    skip;
+
+shuffle_deck =
+    skip;
+
+ww <-- show_winners = 
+    skip;
+
+ll <-- show_losers = 
+    skip
+
+ END
