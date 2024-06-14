@@ -10,7 +10,11 @@ VARIABLES
   player_bet_r,
   player_balance_r,
   player_cards_r,
-  bankers_r
+  bankers_r,
+  stand_r,
+  stand_counter,
+  winners_r,
+  winners_counter
 
 INVARIANT
     players_r : 0..max_players --> USER
@@ -26,16 +30,24 @@ INVARIANT
     & deck_r : 0..51 >->> SUIT * RANK
     & deck = (0..51) <| deck_r
     
-    & player_bet_r : 0..max_players --> 0..2*max_balance
-    & ran(player_bet) = ran(0..2*max_balance <| player_bet_r)
+    & player_bet_r = player_bet
     
-    & player_balance_r : 0..max_players --> 0..2*max_balance
-    & ran(balance) = ran(0..2*max_balance <| player_bet_r)
+    & player_balance_r = balance
     
     & player_cards_r : 0..max_players --> (0..11 >->> SUIT * RANK)
     
     & bankers_r : 0..0 --> USER
     & bankers = ran(0..0 <| bankers_r)
+    
+    & stand_r : 0..max_players+1 --> USER
+    & stand_counter : 0..max_players+1
+    & stand = ran(0..stand_counter <| stand_r)
+    & card(stand) = stand_counter
+    
+    & winners_r: 0..max_players+1 --> USER
+    & winners_counter : 0..table_counter
+    & winners = (0..winners_counter) <| winners_r
+    & size(winners) = winners_counter
 
 INITIALISATION 
     players_r := (0..max_players) * {};
@@ -43,10 +55,14 @@ INITIALISATION
     table_r := (0..6) * {};
     table_counter := 0;
     deck_r := (0..51) * {};
-    player_bet_r := (0..max_players) * {0};
-    player_balance_r := (0..max_players) * {0};
+    player_bet_r := USER * {0};
+    player_balance_r := USER * {0};
     player_cards_r := (0..max_players) * {(0..11)*{}};
-    bankers_r := (0..0) * {}
+    bankers_r := (0..0) * {};
+    stand_r := (0..max_players+1) * {};
+    stand_counter := 0;
+    winners_r := (0..max_players+1) * {};
+    winners_counter := 0
     
 OPERATIONS
 add_player(player) =
