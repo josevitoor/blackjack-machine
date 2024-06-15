@@ -15,7 +15,8 @@ VARIABLES
   stand_counter,
   winners_r,
   winners_counter,
-  banker_ace_r
+  banker_ace_r,
+  player_ace_r
 
 INVARIANT
     players_r : 0..max_players --> USER
@@ -45,6 +46,9 @@ INVARIANT
     & banker_ace_r : ACE
     & banker_ace = banker_ace_r
     
+    & player_ace_r: USER +-> ACE
+    & player_ace = player_ace_r 
+    
     & stand_r : 0..max_players+1 --> USER
     & stand_counter : 0..max_players+1
     & stand = ran(0..stand_counter <| stand_r)
@@ -69,7 +73,8 @@ INITIALISATION
     stand_r := (0..max_players+1) * {};
     stand_counter := 0;
     winners_r := (0..max_players+1) * {};
-    winners_counter := 0
+    winners_counter := 0;
+    player_ace_r := {}
     
 OPERATIONS
     
@@ -77,8 +82,8 @@ add_player(player) =
     BEGIN
         players_r(players_counter) := player;
         players_counter := players_counter + 1;
-        player_balance_r := player_balance_r <+ {player |-> 0};
-        player_bet_r := player_bet_r <+ {player |-> 0}
+        player_balance_r(player) := 0;
+        player_bet_r(player) := 0 
         // player_cards := player_cards \/ { player |-> {} } 
     END;
     
@@ -113,7 +118,13 @@ initialize_table_with_banker(banker) =
 enter_table(player) =
     BEGIN
        table_counter := table_counter + 1;
-       table_r(table_counter) := player
+       table_r(table_counter) := player;
+       player_ace_r := player_ace_r <+ {player |-> no} 
+       /*
+       table := table ^ [player] 
+      || player_ace := player_ace <+ {player |-> no} 
+      || user_card_values := user_card_values <+ {player |-> 0}
+      */
     END;
 
 exit_table(index) = 
@@ -121,9 +132,24 @@ exit_table(index) =
        table_r(index) := table_r(table_counter);
        table_counter := table_counter - 1
     END;
+    /*
+     PRE index : NAT1 & index > 1 & index <= size(table) & table(index) : players & player_bet(table(index)) = 0 & table(index) /: playing
+   THEN table := (table /|\ index-1) ^ (table \|/ index)
+      || player_ace  := {table(index)} <<|  player_ace 
+      || stand := stand - {table(index)}
+      || user_card_values := {table(index)} <<|  user_card_values
+   END;
+   */
 
 bet(player, amount) =
-    skip;
+    BEGIN
+        player_balance_r(player) := player_balance_r(player) - amount;
+        player_bet_r(player) := player_bet_r(player) + amount
+    END;
+    /*
+     player_bet := player_bet  <+ {player |-> amount}  
+      || balance := balance  <+ {player |-> balance(player) - amount}
+    */
 
 deal_initial_player_cards(index) = 
     skip;
@@ -136,11 +162,23 @@ hit_player(player) =
 
 hit_banker(banker) =
     skip;
+    
 stand_player(player) =
     skip;
+    /*
+     PRE player : USER & player : players & player: ran(table) & card(player_cards(player)) >= 2 & player /: stand & banker_cards(table(1)) /= {}
+     THEN stand := stand \/ {player}
+     END;
+
+    */
 
 stand_banker(banker) =
     skip;
+    /*
+    PRE banker : USER & banker: bankers & card(banker_cards(banker)) >= 2 & banker /: stand & user_card_values(banker) >= 17
+    THEN stand := stand \/ {banker}
+    END;
+    */
 
 check_player_result(index, banker) = 
     skip;
