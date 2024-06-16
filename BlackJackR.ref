@@ -164,7 +164,10 @@ hit_banker(banker) =
     skip;
     
 stand_player(player) =
-    skip;
+    BEGIN
+        stand_r(stand_counter) := player;
+        stand_counter := stand_counter + 1
+    END;
     /*
      PRE player : USER & player : players & player: ran(table) & card(player_cards(player)) >= 2 & player /: stand & banker_cards(table(1)) /= {}
      THEN stand := stand \/ {player}
@@ -173,7 +176,10 @@ stand_player(player) =
     */
 
 stand_banker(banker) =
-    skip;
+     BEGIN
+        stand_r(stand_counter) := banker;
+        stand_counter := stand_counter + 1
+     END;
     /*
     PRE banker : USER & banker: bankers & card(banker_cards(banker)) >= 2 & banker /: stand & user_card_values(banker) >= 17
     THEN stand := stand \/ {banker}
@@ -183,8 +189,20 @@ stand_banker(banker) =
 check_player_result(index, banker) = 
     skip;
 
-end_game(banker) = 
-    skip;
+end_game(banker) =
+    BEGIN
+        banker_ace_r := no;
+        stand_r := (0..max_players+1) * {};
+        stand_counter := 0
+    END;
+    /*
+    THEN banker_cards(banker) := {}
+      || banker_ace := no
+      || user_card_values(banker) := 0
+      || stand := {}
+      || playing := {}
+   END;
+   */
 
 shuffle_deck =
     skip;
