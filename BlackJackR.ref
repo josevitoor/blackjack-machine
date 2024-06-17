@@ -7,9 +7,12 @@ VARIABLES
   table_r,
   table_counter,
   deck_r,
+  deck_s,
+  deck_counter,
   player_bet_r,
   player_balance_r,
   player_cards_r,
+  player_cards_s,
   bankers_r,
   stand_r,
   stand_counter,
@@ -29,9 +32,11 @@ INVARIANT
     & table = (0..6) <| table_r
     & size(table) = table_counter
     
-    //& deck_r : 0..51 >->> SUIT * RANK
-    & deck_r : 0..52 >->> SUIT * RANK
-    & deck = (0..52) <| deck_r
+    & deck_s : 0..52 --> SUIT
+    & deck_r : 0..52 --> RANK
+    & deck_counter : 0..52
+    & size(deck) = deck_counter
+    & deck = %ii . (ii: 1..deck_counter | (deck_s(ii),deck_r(ii)))
     
     & player_bet_r : USER --> 0..2*max_balance
     & player_bet = player_bet_r
@@ -39,8 +44,8 @@ INVARIANT
     & player_balance_r : USER --> 0..2*max_balance
     & balance = player_balance_r
     
-    //& player_cards_r : 0..max_players --> (0..11 >->> SUIT * RANK)
-    & player_cards_r :  0..51 --> SUIT * RANK
+    & player_cards_r : 0..max_players --> (0..11 --> RANK)
+    & player_cards_s : 0..max_players --> (0..11 --> SUIT)
     
     & bankers_r : 0..0 --> USER
     & bankers = ran(0..0 <| bankers_r)
@@ -67,10 +72,12 @@ INITIALISATION
     table_r := (0..6) * {};
     table_counter := 0;
     deck_r := (0..52) * {};
+    deck_s := (0..52) * {};
+    deck_counter := 0;
     player_bet_r := USER * {0};
     player_balance_r := USER * {0};
-    //player_cards_r := (0..max_players) * {(0..11)*{}};
-    player_cards_r := {};
+    player_cards_r := (0..max_players) * {(0..11)*{}};
+    player_cards_s := (0..max_players) * {(0..11)*{}};
     bankers_r := (0..0) * {};
     banker_ace_r := no;
     stand_r := (0..max_players+1) * {};
