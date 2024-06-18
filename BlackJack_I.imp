@@ -1,0 +1,188 @@
+IMPLEMENTATION BlackJack_I
+REFINES BlackJack
+
+CONCRETE_VARIABLES
+   players_r, 
+   players_counter,
+   table_r,
+   table_counter,
+   deck_r,
+   deck_s,
+   deck_counter,
+   player_bet_r,
+   player_balance_r,
+   player_cards_r,
+   player_cards_s,
+   bankers_r,
+   stand_r,
+   stand_counter,
+   winners_r,
+   winners_counter,
+   banker_ace_r,
+   player_ace_r
+   
+VALUES
+   USER=0..200;
+   max_balance=100; 
+   max_players=50
+ 
+INVARIANT
+   players_r : 0..max_players --> USER
+   & players_counter : 0..max_players
+   & players = ran(0..players_counter <| players_r)
+   & card(players) = players_counter
+    
+   & table_r : 0..6 --> USER
+   & table_counter : 0..6
+   & table = (0..6) <| table_r
+   & size(table) = table_counter
+    
+   & deck_s : 0..52 --> SUIT
+   & deck_r : 0..52 --> RANK
+   & deck_counter : 0..52
+   & size(deck) = deck_counter
+   & deck = %ii . (ii: 1..deck_counter | (deck_s(ii),deck_r(ii)))
+    
+   & player_bet_r : USER --> 0..2*max_balance
+   & player_bet = player_bet_r
+    
+   & player_balance_r : USER --> 0..2*max_balance
+   & balance = player_balance_r
+    
+   & player_cards_r : 0..max_players --> (0..11 --> RANK)
+   & player_cards_s : 0..max_players --> (0..11 --> SUIT)
+    
+   & bankers_r : 0..0 --> USER
+   & bankers = ran(0..0 <| bankers_r)
+    
+   & banker_ace_r : ACE
+   & banker_ace = banker_ace_r
+    
+   & player_ace_r: USER --> ACE
+   & player_ace = player_ace_r 
+    
+   & stand_r : 0..max_players+1 --> USER
+   & stand_counter : 0..max_players+1
+   & stand = ran(0..stand_counter <| stand_r)
+   & card(stand) = stand_counter
+    
+   & winners_r: 0..max_players+1 --> USER
+   & winners_counter : 0..table_counter
+   & winners = (0..winners_counter) <| winners_r
+   & size(winners) = winners_counter
+
+INITIALISATION 
+   players_r := (0..max_players) * {0};
+   players_counter := 0;
+   table_r := (0..6) * {0};
+   table_counter := 0;
+   deck_r := (0..52) * {ace};
+   deck_s := (0..52) * {clubs};
+   deck_counter := 0;
+   player_bet_r := USER * {0};
+   player_balance_r := USER * {0};
+   player_cards_r := (0..max_players) * {(0..11)*{ace}};
+   player_cards_s := (0..max_players) * {(0..11)*{clubs}};
+   bankers_r := (0..0) * {0};
+   banker_ace_r := no;
+   stand_r := (0..max_players+1) * {0};
+   stand_counter := 0;
+   winners_r := (0..max_players+1) * {0};
+   winners_counter := 0;
+   player_ace_r := USER * {no}
+   
+OPERATIONS
+add_player(player) =
+   BEGIN
+      players_r(players_counter) := player;
+      players_counter := players_counter + 1;
+      player_balance_r(player) := 0;
+      player_bet_r(player) := 0 
+   END;
+
+    
+remove_player(player) =
+   BEGIN
+      players_r(players_r(player)) := players_r(players_counter);
+      players_counter := players_counter -1;
+      player_balance_r(player) := 0;
+      player_bet_r(player) := 0
+   END;
+
+
+add_balance(player, amount) =
+   player_balance_r(player) := player_balance_r(player) + amount;
+    
+remove_balance(player, amount) =
+   player_balance_r(player) := player_balance_r(player) - amount;
+    
+initialize_table_with_banker(banker) =
+   BEGIN   
+      bankers_r(0) := banker;
+      banker_ace_r := no
+   END;
+    
+enter_table(player) =
+   BEGIN
+      table_counter := table_counter + 1;
+      table_r(table_counter) := player;
+      player_ace_r(player) := no
+   END;
+
+
+exit_table(index) = 
+   BEGIN
+      table_r(index) := table_r(table_counter);
+      table_counter := table_counter - 1
+   END;
+    
+bet(player, amount) =
+   BEGIN
+       player_balance_r(player) := player_balance_r(player) - amount;
+       player_bet_r(player) := player_bet_r(player) + amount
+   END;
+
+deal_initial_player_cards(index) = 
+   skip;
+
+deal_initial_banker_cards = 
+   skip;
+    
+hit_player(player) =
+   skip;
+
+hit_banker(banker) =
+   skip;
+    
+stand_player(player) =
+   BEGIN
+      stand_r(stand_counter) := player;
+      stand_counter := stand_counter + 1
+   END;
+
+stand_banker(banker) =
+   BEGIN
+      stand_r(stand_counter) := banker;
+      stand_counter := stand_counter + 1
+   END;
+
+check_player_result(index, banker) = 
+    skip;
+
+end_game(banker) =
+   BEGIN
+      banker_ace_r := no;
+      stand_r := (0..max_players+1) * {0};
+      stand_counter := 0
+   END;
+    
+ shuffle_deck =
+   skip;
+
+ww <-- show_winners = 
+   skip;
+
+ll <-- show_losers = 
+   skip
+
+END
