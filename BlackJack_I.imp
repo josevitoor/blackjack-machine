@@ -16,9 +16,10 @@ CONCRETE_VARIABLES
    playing_r,
    bankers_r,
    stand_r,
-   stand_counter,
    winners_r,
+   losers_r,
    winners_counter,
+   losers_counter,
    banker_ace_r,
    player_ace_r,
    values_r,
@@ -67,22 +68,24 @@ INVARIANT
    
    & playing_r : USER --> BOOL
    & playing = dom(playing_r |> {TRUE}) 
-    
-   & stand_r : 0..max_players+1 --> USER
-   & stand_counter : 0..max_players+1
-   & stand = ran(0..stand_counter <| stand_r)
-   & card(stand) = stand_counter
-    
-   & winners_r: 0..max_players+1 --> USER
-   & winners_counter : 0..table_counter
-   & winners = (0..winners_counter) <| winners_r
-   & size(winners) = winners_counter
+   
+   & stand_r : USER --> BOOL
+   & stand = dom(stand_r |> {TRUE}) 
+  
+   & winners_r: 0..4 --> USER
+   & winners = winners_r
+   & winners_counter: 0..4
+   
+   & losers_r: 0..4 --> USER
+   & losers = losers_r
+   & losers_counter: 0..4
    
    & values_r : RANK --> 1..10
    & values = values_r
    
    & user_card_values_r : USER --> 0..30
    & user_card_values = user_card_values_r
+   
 
 INITIALISATION 
    players_r := (0..max_players) * {0};
@@ -98,14 +101,20 @@ INITIALISATION
    player_cards_s := (0..max_players) * {(0..11)*{clubs}};
    bankers_r := (0..0) * {0};
    banker_ace_r := no;
-   stand_r := (0..max_players+1) * {0};
-   stand_counter := 0;
-   winners_r := (0..max_players+1) * {0};
+   stand_r := USER * {FALSE};
+   
+   //winners_r := (0..max_players+1) * {0};
+   winners_r := (0..4) * {0};
    winners_counter := 0;
+   
+   losers_r := (0..4) * {0};
+   losers_counter := 0;
+   
    player_ace_r := USER * {no};
    playing_r := USER * {FALSE};
    values_r := {ace |->1, two |-> 2, three |-> 3, four |-> 4, five |-> 5, six |-> 6, seven |-> 7, eight |-> 8, nine |-> 9, ten |-> 10, jack |-> 10, queen |-> 10, king |-> 10};
    user_card_values_r := USER * {0}
+   
    
 OPERATIONS
 add_player(player) =
@@ -113,7 +122,8 @@ add_player(player) =
       players_r(players_counter) := player;
       players_counter := players_counter + 1;
       player_balance_r(player) := 0;
-      player_bet_r(player) := 0 
+      player_bet_r(player) := 0
+      //inicializar as cartas do player?
    END;
    
 remove_player(player) =
@@ -122,6 +132,7 @@ remove_player(player) =
       players_counter := players_counter -1;
       player_balance_r(player) := 0;
       player_bet_r(player) := 0
+      //remover as cartas do player?
    END;
 
 add_balance(player, amount) =
@@ -155,19 +166,6 @@ bet(player, amount) =
        player_bet_r(player) := player_bet_r(player) + amount
    END;
 
-/*
-
- players_r : 0..max_players --> USER
-   & players_counter : 0..max_players
-   
-  & table_r : 0..6 --> USER
-   & table_counter : 0..6
-   & table = (0..6) <| table_r
-   & size(table) = table_counter
-
-& player_cards_s : 0..max_players --> (0..11 --> SUIT)
-   & player_cards_r : 0..max_players --> (0..11 --> RANK)
-*/
 deal_initial_player_cards(index) = 
    BEGIN
        playing_r(table_r(index)) := TRUE;
@@ -180,10 +178,14 @@ deal_initial_player_cards(index) =
            value := value + values_r(deck_r(deck_counter + 1));
            user_card_values_r(table_r(index)) := value
        END;
-        
-       IF deck_r(deck_counter) = ace or deck_r(deck_counter + 1) = ace
-       THEN player_ace_r(table_r(index)) := yes; 
-           user_card_values_r(table_r(index)) := user_card_values_r(table_r(index)) + 10
+       
+       VAR uu, ii IN
+          ii:= deck_r(deck_counter);
+          uu:= deck_r(deck_counter+1);
+          IF ii = ace or uu = ace
+          THEN player_ace_r(table_r(index)) := yes; 
+            user_card_values_r(table_r(index)) := user_card_values_r(table_r(index)) + 10
+          END
        END;
        deck_counter := deck_counter + 2
        
@@ -194,10 +196,14 @@ deal_initial_player_cards(index) =
 deal_initial_banker_cards = 
    BEGIN      
        //de alguma forma atribui a carta deck_r(deck_counter) e deck_s(deck_counter) as cartas do banker
-     
-      IF deck_r(deck_counter) = ace
-      THEN banker_ace_r := yes; 
-           user_card_values_r(table_r(0)) := user_card_values_r(table_r(0)) + 10 //alterar o index da table se for pra iniciar o indice em 1
+       
+      user_card_values_r(table_r(0)) := values_r(deck_r(deck_counter));  //alterar o index da table se for pra iniciar o indice em 1
+      VAR ii IN
+          ii:= deck_r(deck_counter);
+          IF ii = ace
+          THEN banker_ace_r := yes;  //alterar o index da table se for pra iniciar o indice em 1 
+             user_card_values_r(table_r(0)) := user_card_values_r(table_r(0)) + 10 //alterar o index da table se for pra iniciar o indice em 1
+          END
       END;
       deck_counter := deck_counter + 1
       //setar losers e winners
@@ -205,43 +211,125 @@ deal_initial_banker_cards =
    END;
     
 hit_player(player) =
-   skip;
+   BEGIN
+       // de alguma forma atribuir as cartas para as cartas do usuário
+       VAR ii IN
+          ii:= deck_r(deck_counter);
+          IF ii = ace
+          THEN 
+              VAR aa, bb, cc IN
+                  aa := user_card_values_r(player) + 11;
+                  bb := bool(aa > 21);
+                  cc := player_ace_r(player);
+                  IF cc = yes or bb = TRUE
+                  THEN user_card_values_r(player) := user_card_values_r(player) + 1
+                  ELSE      
+                      player_ace_r(player) := yes; 
+                      user_card_values_r(player) := user_card_values_r(player) + 11
+                  END
+              END
+          ELSE user_card_values_r(player) := values_r(deck_r(deck_counter))
+          END
+      END;
+      deck_counter := deck_counter + 1
+      
+   END;
 
 hit_banker(banker) =
-   skip;
+   BEGIN
+      VAR ii IN
+          ii:= deck_r(deck_counter);
+          IF ii = ace
+          THEN 
+              VAR aa, bb IN
+                  aa := user_card_values_r(banker) + 11;
+                  bb := bool(aa > 21);
+                  IF banker_ace_r = yes or bb = TRUE
+                  THEN user_card_values_r(banker) := user_card_values_r(banker) + 1
+                  ELSE      
+                      player_ace_r(banker) := yes; 
+                      user_card_values_r(banker) := user_card_values_r(banker) + 11
+                  END
+              END
+          ELSE user_card_values_r(banker) := values_r(deck_r(deck_counter))
+          END
+      END;
+      deck_counter := deck_counter + 1 
+   END;
     
 stand_player(player) =
    BEGIN
-      stand_r(stand_counter) := player;
-      stand_counter := stand_counter + 1
+      stand_r(player) := TRUE
    END;
 
 stand_banker(banker) =
    BEGIN
-      stand_r(stand_counter) := banker;
-      stand_counter := stand_counter + 1
+      stand_r(banker) := TRUE
    END;
 
 check_player_result(index, banker) = 
-    skip;
+    BEGIN
+        VAR uu_v, bk_v, ug, bg, eq, uo, bo IN 
+            
+            uu_v := user_card_values_r(table_r(index));
+            bk_v := user_card_values_r(banker);
+            uo := bool(uu_v > 21);
+            bo := bool(bk_v > 21);
+            ug := bool(uu_v > bk_v);
+            bg := bool(bk_v > uu_v);
+            eq := bool(uu_v = bk_v);
+            
+            IF uo = TRUE THEN
+                //checar se já não foi adicionado na lista? Tem isso na máquina
+                losers_r(losers_counter) := table_r(index);
+                losers_counter := losers_counter + 1
+            
+            ELSIF bo = TRUE THEN
+                 //checar se já não foi adicionado na lista? Tem isso na máquina
+                player_balance_r(table_r(index)) := player_balance_r(table_r(index)) + (player_bet_r(table_r(index)) * 2);
+                winners_r(winners_counter) := table_r(index);
+                winners_counter := winners_counter + 1
+            
+            ELSIF ug = TRUE THEN
+                 //checar se já não foi adicionado na lista? Tem isso na máquina
+                player_balance_r(table_r(index)) := player_balance_r(table_r(index)) + (player_bet_r(table_r(index)) * 2);
+                winners_r(winners_counter) := table_r(index);
+                winners_counter := winners_counter + 1
+                
+            ELSIF eq = TRUE THEN
+                player_balance_r(table_r(index)) := player_balance_r(table_r(index)) + player_bet_r(table_r(index))
+            
+            ELSIF bg = TRUE THEN
+                 //checar se já não foi adicionado na lista? Tem isso na máquina
+                losers_r(losers_counter) := table_r(index);
+                losers_counter := losers_counter + 1
+            END
+            
+         END;
+            
+        player_bet_r(table_r(index)) := 0;
+        user_card_values_r(table_r(index)) := 0;
+        player_ace_r(table_r(index)) := no;
+        stand_r(table_r(index)) := FALSE
+        
+    END;
     
 
 end_game(banker) =
    BEGIN
       banker_ace_r := no;
-      stand_r := (0..max_players+1) * {0};
-      stand_counter := 0;
+      stand_r := USER * {FALSE};
       playing_r := USER * {FALSE}
     
    END;
     
- shuffle_deck =
+shuffle_deck =
    skip;
 
 ww <-- show_winners = 
-   skip;
+   ww := winners_r;
 
 ll <-- show_losers = 
-   skip
+   ll := losers_r
 
 END
