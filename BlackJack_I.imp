@@ -205,8 +205,11 @@ deal_initial_banker_cards =
              user_card_values_r(table_r(0)) := user_card_values_r(table_r(0)) + 10 //alterar o index da table se for pra iniciar o indice em 1
           END
       END;
-      deck_counter := deck_counter + 1
-      //setar losers e winners
+      deck_counter := deck_counter + 1;
+      winners_r := (0..4) * {0};
+      winners_counter := 0;
+      losers_r := (0..4) * {0};
+      losers_counter := 0
       
    END;
     
