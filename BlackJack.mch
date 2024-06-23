@@ -107,7 +107,7 @@ remove_balance(player, amount) =
    END;
 
 initialize_table_with_banker(banker) = 
-   PRE banker : USER & banker /: players & size(table) = 0
+   PRE banker : USER & banker /: players & size(table) = 0 
    THEN bankers := {banker} 
       || table := table ^ [banker]
       || banker_ace := no
@@ -269,13 +269,13 @@ shuffle_deck =
    END;
 
 ww <-- show_winners = 
-PRE card(playing) = 0
-THEN ww := winners
-END;
+   PRE card ( playing ) = 0 & (!ii . ((ii : 0..4 & ww : 0..4 --> USER)  => ww(ii) : USER))
+   THEN ww := %ii.(ii : 0..4 | winners(0)) <+ winners
+   END;
 
 ll <-- show_losers = 
-PRE card(playing) = 0
-THEN ll := losers
-END
+   PRE card ( playing ) = 0 & (!ii . ((ii : 0..4 & ll : 0..4 --> USER)  => ll(ii) : USER))
+   THEN ll := %ii.(ii : 0..4 | losers(0)) <+ losers
+   END
 
 END
