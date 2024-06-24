@@ -74,6 +74,12 @@ extern void BlackJack__end_game(BlackJack__USER banker);
 extern void BlackJack__shuffle_deck(void);
 extern void BlackJack__show_winners(BlackJack__USER *ww);
 extern void BlackJack__show_losers(BlackJack__USER *ll);
+extern void BlackJack__show_player_bet(int32_t *bb, BlackJack__USER player);
+extern void BlackJack__show_player_balance(int32_t *bb, BlackJack__USER player);
+extern void BlackJack__show_player_cards(BlackJack__RANK *rr, BlackJack__SUIT *ss, BlackJack__USER player);
+extern void BlackJack__show_banker_cards(BlackJack__RANK *rr, BlackJack__SUIT *ss);
+extern void BlackJack__show_banker_cards_values(int32_t *rr, BlackJack__USER banker);
+extern void BlackJack__show_player_cards_values(int32_t *rr, BlackJack__USER player);
 
 #ifdef __cplusplus
 }
