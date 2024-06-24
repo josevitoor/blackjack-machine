@@ -1,5 +1,8 @@
 /* WARNING if type checker is not performed, translation could contain errors ! */
 
+#include <stdlib.h>
+#include <time.h>
+
 #include "BlackJack.h"
 
 /* Clause CONCRETE_CONSTANTS */
@@ -167,12 +170,12 @@ void BlackJack__deal_initial_player_cards(int32_t index) {
   {
     int32_t pos;
 
-    pos = BlackJack__player_cards_counter[BlackJack__players_r[BlackJack__table_r[index]]];
-    BlackJack__player_cards_s[BlackJack__players_r[BlackJack__table_r[index]]][pos] = BlackJack__deck_s[BlackJack__deck_counter];
-    BlackJack__player_cards_s[BlackJack__players_r[BlackJack__table_r[index]]][pos + 1] = BlackJack__deck_s[BlackJack__deck_counter + 1];
-    BlackJack__player_cards_r[BlackJack__players_r[BlackJack__table_r[index]]][pos] = BlackJack__deck_r[BlackJack__deck_counter];
-    BlackJack__player_cards_r[BlackJack__players_r[BlackJack__table_r[index]]][pos + 1] = BlackJack__deck_r[BlackJack__deck_counter + 1];
-    BlackJack__player_cards_counter[BlackJack__players_r[BlackJack__table_r[index]]] = pos + 2;
+    pos = BlackJack__player_cards_counter[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]];
+    BlackJack__player_cards_s[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]][pos] = BlackJack__deck_s[BlackJack__deck_counter];
+    BlackJack__player_cards_s[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]][pos + 1] = BlackJack__deck_s[BlackJack__deck_counter + 1];
+    BlackJack__player_cards_r[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]][pos] = BlackJack__deck_r[BlackJack__deck_counter];
+    BlackJack__player_cards_r[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]][pos + 1] = BlackJack__deck_r[BlackJack__deck_counter + 1];
+    BlackJack__player_cards_counter[BlackJack__players_r[BlackJack__table_r[BlackJack__table_r[index]]]] = pos + 2;
   }
   {
     int32_t value;
@@ -245,7 +248,7 @@ void BlackJack__hit_player(BlackJack__USER player) {
         }
       }
     } else {
-      BlackJack__user_card_values_r[player] = BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+      BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
     }
   }
   BlackJack__deck_counter = BlackJack__deck_counter + 1;
@@ -274,7 +277,7 @@ void BlackJack__hit_banker(BlackJack__USER banker) {
         }
       }
     } else {
-      BlackJack__user_card_values_r[banker] = BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+      BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
     }
   }
   BlackJack__deck_counter = BlackJack__deck_counter + 1;
@@ -344,6 +347,7 @@ void BlackJack__end_game(BlackJack__USER banker) {
   }
 }
 
+/* Operação gerada automaticamentee para inciar o baralho de forma fixa
 void BlackJack__shuffle_deck(void) {
   {
     int32_t ii;
@@ -374,6 +378,29 @@ void BlackJack__shuffle_deck(void) {
       ii = ii + 1;
     }
   }
+}*/
+
+// Operação criada para embaralhar aletaroriamente
+void BlackJack__shuffle_deck(void) {
+  int index = 0;
+  for (int suit = BlackJack__clubs; suit < BlackJack__SUIT__max; ++suit) {
+    for (int rank = BlackJack__ace; rank < BlackJack__RANK__max; ++rank) {
+      BlackJack__deck_s[index] = suit;
+      BlackJack__deck_r[index] = rank;
+      ++index;
+    }
+  }
+
+  srand((unsigned int)time(NULL));
+  for (int i = 51; i > 0; --i) {
+    int j = rand() % (i + 1);
+    BlackJack__SUIT temp_suit = BlackJack__deck_s[i];
+    BlackJack__RANK temp_rank = BlackJack__deck_r[i];
+    BlackJack__deck_s[i] = BlackJack__deck_s[j];
+    BlackJack__deck_r[i] = BlackJack__deck_r[j];
+    BlackJack__deck_s[j] = temp_suit;
+    BlackJack__deck_r[j] = temp_rank;
+  }
 }
 
 void BlackJack__show_winners(BlackJack__USER *ww) {
@@ -382,4 +409,36 @@ void BlackJack__show_winners(BlackJack__USER *ww) {
 
 void BlackJack__show_losers(BlackJack__USER *ll) {
   memmove(ll, BlackJack__losers_r, (5) * sizeof(int32_t));
+}
+
+// Operação criada para consultar aposta do jogador
+void BlackJack__show_player_bet(int32_t *bb, BlackJack__USER player) {
+  *bb = BlackJack__player_bet_r[player];
+}
+
+// Operação criada para consultar saldo do jogador
+void BlackJack__show_player_balance(int32_t *bb, BlackJack__USER player) {
+  *bb = BlackJack__player_balance_r[player];
+}
+
+// Operação criada para consultar cartas do jogador
+void BlackJack__show_player_cards(BlackJack__RANK *rr, BlackJack__SUIT *ss, BlackJack__USER player) {
+  memmove(rr, BlackJack__player_cards_r[BlackJack__players_r[BlackJack__table_r[player]]], (12) * sizeof(BlackJack__RANK));
+  memmove(ss, BlackJack__player_cards_s[BlackJack__players_r[BlackJack__table_r[player]]], (12) * sizeof(BlackJack__SUIT));
+}
+
+// Operação criada para consultar cartas do banqueiro
+void BlackJack__show_banker_cards(BlackJack__RANK *rr, BlackJack__SUIT *ss) {
+  memmove(rr, BlackJack__banker_cards_r, (12) * sizeof(BlackJack__RANK));
+  memmove(ss, BlackJack__banker_cards_s, (12) * sizeof(BlackJack__SUIT));
+}
+
+// Operação criada para consultar valor das cartas do banqueiro
+void BlackJack__show_banker_cards_values(int32_t *rr, BlackJack__USER banker) {
+  *rr = BlackJack__user_card_values_r[banker];
+}
+
+// Operação criada para consultar valor das cartas do jogador
+void BlackJack__show_player_cards_values(int32_t *rr, BlackJack__USER player) {
+  *rr = BlackJack__user_card_values_r[BlackJack__table_r[2]];
 }
