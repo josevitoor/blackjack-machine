@@ -280,6 +280,7 @@ hit_banker(banker) =
    BEGIN
       banker_cards_r(banker_cards_counter) := deck_r(deck_counter);
       banker_cards_s(banker_cards_counter) := deck_s(deck_counter);
+      banker_cards_counter := banker_cards_counter + 1;
       VAR ii IN
           ii:= deck_r(deck_counter);
           IF ii = ace
