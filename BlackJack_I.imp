@@ -253,13 +253,23 @@ hit_player(player) =
                  aa := user_card_values_r(player) + 11;
                  bb := bool(aa > 21);
                  IF bb = TRUE
-                 THEN user_card_values_r(player) := user_card_values_r(player) + 1
+                 THEN user_card_values_r(player) := user_card_values_r(player) + 1;
+                    player_ace_r(player) := no
                  ELSE player_ace_r(player) := yes; 
                      user_card_values_r(player) := user_card_values_r(player) + 11
                  END
              END
          ELSIF cc = yes
-         THEN user_card_values_r(player) := user_card_values_r(player) + 1
+         THEN 
+             VAR aa, bb IN
+                 aa := user_card_values_r(player) + values_r(deck_r(deck_counter));
+                 bb := bool(aa > 21);
+                 IF bb = TRUE
+                 THEN user_card_values_r(player) := user_card_values_r(player) + values_r(deck_r(deck_counter)) - 10;
+                    player_ace_r(player) := no
+                 ELSE user_card_values_r(player) := user_card_values_r(player) + values_r(deck_r(deck_counter))
+                 END
+             END            
          ELSE user_card_values_r(player) := user_card_values_r(player) +  values_r(deck_r(deck_counter))
          END
       END;
@@ -278,14 +288,25 @@ hit_banker(banker) =
                   aa := user_card_values_r(banker) + 11;
                   bb := bool(aa > 21);
                   IF bb = TRUE
-                  THEN user_card_values_r(banker) := user_card_values_r(banker) + 1
+                  THEN user_card_values_r(banker) := user_card_values_r(banker) + 1;
+                     banker_ace_r := no
                   ELSE      
                       player_ace_r(banker) := yes; 
                       user_card_values_r(banker) := user_card_values_r(banker) + 11
                   END
               END
           ELSIF banker_ace_r = yes
-          THEN user_card_values_r(banker) := user_card_values_r(banker) + 1
+          THEN 
+             VAR aa, bb IN
+                  aa := user_card_values_r(banker) + values_r(deck_r(deck_counter));
+                  bb := bool(aa > 21);
+                  IF bb = TRUE
+                  THEN user_card_values_r(banker) := user_card_values_r(banker) +  values_r(deck_r(deck_counter)) - 10;
+                     banker_ace_r := no
+                  ELSE      
+                      user_card_values_r(banker) := user_card_values_r(banker) + values_r(deck_r(deck_counter))
+                  END
+              END             
           ELSE user_card_values_r(banker) := user_card_values_r(banker) +  values_r(deck_r(deck_counter))
           END
       END;
