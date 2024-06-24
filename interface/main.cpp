@@ -11,6 +11,7 @@
 #include "imgui_impl_dx11.h"
 #include <d3d11.h>
 #include <tchar.h>
+#include <iostream>
 #include <string>
 
 extern "C" {
@@ -40,7 +41,7 @@ int main(int, char**)
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Dear ImGui DirectX11 Example", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"BlackJack", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
@@ -109,7 +110,7 @@ int main(int, char**)
         "9",
         "10",
         "Valete",
-        "Rainha",
+        "Dama",
         "Rei" };
 
 
@@ -136,6 +137,14 @@ int main(int, char**)
     int32_t winners_counter;
     int32_t losers_counter;
 
+    int32_t playerBet;
+    int32_t playerBalance;
+
+    char inputBalance;
+    char inputBet;
+
+    BlackJack__INITIALISATION();
+    BlackJack__add_player(player1);
 
     // Main loop
     bool done = false;
@@ -184,8 +193,15 @@ int main(int, char**)
                 ImGui::Begin("Blackjack Game", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
                 ImGui::Dummy(ImVec2(10.0f, 10.0f));
-                ImGui::Text("Click em Jogar para iniciar o BlackJack");
-                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Text("Metodos Formais | IMD | UFRN");
+                ImGui::Dummy(ImVec2(10.0f, 10.0f));
+                ImGui::Text("Autores: ");
+                ImGui::Text("Jose Vitor de Freitas Cunha");
+                ImGui::Text("Rodrigo Gomes da Rocha");
+
+
+                ImGui::Dummy(ImVec2(10.0f, 10.0f));
+                ImGui::Text("Aposte e, em seguida, click em Jogar para iniciar o BlackJack");
 
                 // Center the button
                 ImVec2 window_size = ImGui::GetWindowSize();
@@ -199,31 +215,65 @@ int main(int, char**)
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20, 10)); // Padding
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(20, 20)); // Spacing
 
-                ImGui::SetCursorPosX((window_size.x - button_size.x) / 2);
-                ImGui::SetCursorPosY((window_size.y - button_size.y) / 2);
-                if (ImGui::Button("Jogar", button_size)) {
-                    gameStarted = true;
-                    printf("iniciando jogo\n");
+                
+                BlackJack__show_player_balance(&playerBalance, player1);
+                BlackJack__show_player_bet(&playerBet, player1);
 
-                    BlackJack__INITIALISATION();
+                ImGui::SetCursorPosY((window_size.y - button_size.y) / 2 - 100);
 
-                    BlackJack__add_player(player1);
-                    BlackJack__initialize_table_with_banker(banker);
+                if (playerBet >= 10) {
 
-                    BlackJack__add_balance(player1, 100);
+                    ImGui::SetCursorPosX((window_size.x - button_size.x) / 2);
 
-                    BlackJack__enter_table(player1);
+                    if (ImGui::Button("Jogar", button_size)) {
+                        gameStarted = true;
+                        // printf("iniciando jogo\n");
 
-                    BlackJack__bet(player1, 10);
+                        BlackJack__initialize_table_with_banker(banker);
+                        BlackJack__enter_table(player1);
+                        BlackJack__shuffle_deck();
+                        BlackJack__deal_initial_banker_cards();
+                        // 2 é o indice do Jogador 1 na mesa
+                        BlackJack__deal_initial_player_cards(2);
 
-                    BlackJack__shuffle_deck();
-
-                    BlackJack__deal_initial_banker_cards();
-
-                    // 2 é o indice do Jogador 1 na mesa
-                    BlackJack__deal_initial_player_cards(2);
+                    }
 
                 }
+
+               
+                if (ImGui::Button("Adicione 10 reais", button_size)) {
+                    BlackJack__add_balance(player1, 10);           
+                    BlackJack__show_player_balance(&playerBalance, player1);
+                }
+
+                if (ImGui::Button("Retire 10 reais", button_size)) {
+                    if (playerBalance >= 10) {
+                        BlackJack__remove_balance(player1, 10);
+                        BlackJack__show_player_balance(&playerBalance, player1);
+                    }
+                }
+
+                if (ImGui::Button("Aposte 10 reais", button_size)) {
+                    if (playerBalance >= 10) {
+                        BlackJack__bet(player1, 10);
+                        BlackJack__show_player_balance(&playerBalance, player1);
+                        BlackJack__show_player_bet(&playerBet, player1);
+                    }
+                }
+
+               
+                BlackJack__show_player_balance(&playerBalance, player1);
+                BlackJack__show_player_bet(&playerBet, player1);
+
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Text("Seu dinheiro");
+                ImGui::Text("%d", playerBalance);
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+                ImGui::Text("Sua aposta");
+                ImGui::Text("%d", playerBet);
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
 
                 ImGui::PopStyleColor(3);
                 ImGui::PopStyleVar(3);
@@ -275,11 +325,24 @@ int main(int, char**)
 
                 ImGui::Dummy(ImVec2(0.0f, 30.0f));
 
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+                ImGui::Text("Seu dinheiro");
+                ImGui::Text("%d", playerBalance);
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+                ImGui::Text("Sua aposta");
+                ImGui::Text("%d", playerBet);
+                ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
+
+               
+                ImVec2 button_size = ImVec2(300, 40);
+               
 
                 // Center the buttons
                 ImVec2 window_size = ImGui::GetWindowSize();
-                ImVec2 button_size = ImVec2(300, 40); // Larger button size
                 ImVec2 button_pos = ImVec2((window_size.x - button_size.x) / 2, ImGui::GetCursorPosY());
+              
 
                 // Style the buttons
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.6f, 0.4f, 1.0f));
@@ -299,8 +362,8 @@ int main(int, char**)
 
                         BlackJack__show_banker_cards_values(&banker_card_values, banker);
                         BlackJack__show_player_cards_values(&player_card_values, player1);
-                        printf("Valor player: %d\n", player_card_values);
-                        printf("Valor banker: %d\n", banker_card_values);
+                        //printf("Valor player: %d\n", player_card_values);
+                        //printf("Valor banker: %d\n", banker_card_values);
 
                         if(player_card_values > 21){
                             playerLose = true;
@@ -319,7 +382,7 @@ int main(int, char**)
                         BlackJack__show_banker_cards_values(&banker_card_values, banker);
                         while (banker_card_values < 17) {
                             BlackJack__hit_banker(banker);
-                            BlackJack__show_banker_cards(banker_rank, banker_suit);
+                            //BlackJack__show_banker_cards(banker_rank, banker_suit);
                             BlackJack__show_banker_cards_values(&banker_card_values, banker);
                             bankerCardsQtd = bankerCardsQtd + 1;
                         }
@@ -338,12 +401,12 @@ int main(int, char**)
                        
                         BlackJack__show_winners_counter(&winners_counter);
 
-                        printf("Winners counter: %d\n", winners_counter);
+                        //printf("Winners counter: %d\n", winners_counter);
 
                        
                         BlackJack__show_losers_counter(&losers_counter);
 
-                        printf("Losers counter : % d\n", losers_counter);
+                        //printf("Losers counter : % d\n", losers_counter);
 
                        
                         if (losers_counter == 1) {
@@ -384,6 +447,9 @@ int main(int, char**)
                     if (ImGui::Button("Jogar novamente", button_size)) {
                         stand = false;
 
+                        BlackJack__check_player_result(2, banker);
+                        BlackJack__show_player_balance(&playerBalance, player1);
+
                         BlackJack__end_game(banker);
 
                         gameEnded = false;
@@ -394,28 +460,15 @@ int main(int, char**)
                         bankerCardsQtd = 1;
                         banker_card_values = 0;
                         player_card_values = 0;
+                        gameStarted = false;
 
-                        printf("iniciando novamente\n");
+
                         BlackJack__INITIALISATION();
-
                         BlackJack__add_player(player1);
-                        BlackJack__initialize_table_with_banker(banker);
+                        BlackJack__add_balance(player1, playerBalance);
 
-                        BlackJack__add_balance(player1, 100);
-
-                        BlackJack__enter_table(player1);
-
-                        BlackJack__bet(player1, 10);
-
-                        BlackJack__shuffle_deck();
-
-                        BlackJack__deal_initial_banker_cards();
-
-                        // 2 é o indice do Jogador 1 na mesa
-                        BlackJack__deal_initial_player_cards(2);
                     }
                 }
-
              
 
                 ImGui::PopStyleColor(3);

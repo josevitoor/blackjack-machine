@@ -1,11 +1,26 @@
 ﻿  main.cpp
-C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x208e que é inválido no conjunto de caracteres de origem atual (página de código 65001).
-C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x2c97 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
-C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x2ca5 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
-C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x33c1 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
-C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x3eab que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x2273 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x3588 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x3596 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x3cb8 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(143,10): warning C4101: 'inputBalance': variável local não referenciada
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(144,10): warning C4101: 'inputBet': variável local não referenciada
+  BlackJack.c
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x40e8 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4457 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x488a que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4938 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x49ed que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4a8a que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4b25 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4cc4 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4de9 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(1,1): warning C4828: O arquivo contém um caractere começando com o deslocamento 0x4eb2 que é inválido no conjunto de caracteres de origem atual (página de código 65001).
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\BlackJack.c(377,42): warning C4100: 'banker': parâmetro formal não referenciado
   Gerando código
-  1 of 1376 functions (<0.1%) were compiled, the rest were copied from previous compilation.
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(330): warning C4701: variável local possivelmente não inicializada 'playerBalance' usada
+C:\Users\rodri\Documents\imgui-master\imgui-master\examples\example_win32_directx11\main.cpp(334): warning C4701: variável local possivelmente não inicializada 'playerBet' usada
+  2 of 1379 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     20 functions had inline decision re-evaluated but remain unchanged
   Finalizada a geração de código

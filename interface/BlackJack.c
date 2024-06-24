@@ -228,24 +228,40 @@ void BlackJack__hit_player(BlackJack__USER player) {
     }
     {
         BlackJack__RANK ii;
+        BlackJack__ACE cc;
 
         ii = BlackJack__deck_r[BlackJack__deck_counter];
+        cc = BlackJack__player_ace_r[player];
         if (ii == BlackJack__ace) {
             {
                 int32_t aa;
                 bool bb;
-                BlackJack__ACE cc;
 
                 aa = BlackJack__user_card_values_r[player] + 11;
                 bb = (((aa) > (21)) ? true : false);
-                cc = BlackJack__player_ace_r[player];
-                if ((cc == BlackJack__yes) ||
-                    (bb == true)) {
+                if (bb == true) {
                     BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + 1;
+                    BlackJack__player_ace_r[player] = BlackJack__no;
                 }
                 else {
                     BlackJack__player_ace_r[player] = BlackJack__yes;
                     BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + 11;
+                }
+            }
+        }
+        else if (cc == BlackJack__yes) {
+            {
+                int32_t aa;
+                bool bb;
+
+                aa = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+                bb = (((aa) > (21)) ? true : false);
+                if (bb == true) {
+                    BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]] - 10;
+                    BlackJack__player_ace_r[player] = BlackJack__no;
+                }
+                else {
+                    BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
                 }
             }
         }
@@ -259,6 +275,7 @@ void BlackJack__hit_player(BlackJack__USER player) {
 void BlackJack__hit_banker(BlackJack__USER banker) {
     BlackJack__banker_cards_r[BlackJack__banker_cards_counter] = BlackJack__deck_r[BlackJack__deck_counter];
     BlackJack__banker_cards_s[BlackJack__banker_cards_counter] = BlackJack__deck_s[BlackJack__deck_counter];
+    BlackJack__banker_cards_counter = BlackJack__banker_cards_counter + 1;
     {
         BlackJack__RANK ii;
 
@@ -270,13 +287,29 @@ void BlackJack__hit_banker(BlackJack__USER banker) {
 
                 aa = BlackJack__user_card_values_r[banker] + 11;
                 bb = (((aa) > (21)) ? true : false);
-                if ((BlackJack__banker_ace_r == BlackJack__yes) ||
-                    (bb == true)) {
+                if (bb == true) {
                     BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + 1;
+                    BlackJack__banker_ace_r = BlackJack__no;
                 }
                 else {
                     BlackJack__player_ace_r[banker] = BlackJack__yes;
                     BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + 11;
+                }
+            }
+        }
+        else if (BlackJack__banker_ace_r == BlackJack__yes) {
+            {
+                int32_t aa;
+                bool bb;
+
+                aa = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+                bb = (((aa) > (21)) ? true : false);
+                if (bb == true) {
+                    BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]] - 10;
+                    BlackJack__banker_ace_r = BlackJack__no;
+                }
+                else {
+                    BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
                 }
             }
         }
@@ -438,7 +471,6 @@ void BlackJack__show_winners_counter(int32_t* cc) {
 void BlackJack__show_losers_counter(int32_t* cc) {
     *cc = BlackJack__losers_counter;
 }
-
 
 // Operação criada para consultar cartas do jogador
 void BlackJack__show_player_cards(BlackJack__RANK* rr, BlackJack__SUIT* ss, BlackJack__USER player) {
