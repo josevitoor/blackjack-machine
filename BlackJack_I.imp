@@ -186,14 +186,14 @@ deal_initial_player_cards(index) =
    BEGIN
        playing_r(table_r(index)) := TRUE;
        
-       VAR pos IN pos := player_cards_counter(players_r(table_r(index)));
-        player_cards_s(players_r(table_r(index)))(pos) := deck_s(deck_counter);
-        player_cards_s(players_r(table_r(index)))(pos+1) := deck_s(deck_counter+1);
+       VAR pos IN pos := player_cards_counter(players_r(table_r(table_r(index))));
+        player_cards_s(players_r(table_r(table_r(index))))(pos) := deck_s(deck_counter);
+        player_cards_s(players_r(table_r(table_r(index))))(pos+1) := deck_s(deck_counter+1);
         
-        player_cards_r(players_r(table_r(index)))(pos) := deck_r(deck_counter);
-        player_cards_r(players_r(table_r(index)))(pos+1) := deck_r(deck_counter+1);
+        player_cards_r(players_r(table_r(table_r(index))))(pos) := deck_r(deck_counter);
+        player_cards_r(players_r(table_r(table_r(index))))(pos+1) := deck_r(deck_counter+1);
         
-        player_cards_counter(players_r(table_r(index))) := pos + 2
+        player_cards_counter(players_r(table_r(table_r(index)))) := pos + 2
         END;
         
        VAR value IN value := 0;
@@ -260,7 +260,7 @@ hit_player(player) =
                      user_card_values_r(player) := user_card_values_r(player) + 11
                  END
              END
-         ELSE user_card_values_r(player) := values_r(deck_r(deck_counter))
+         ELSE user_card_values_r(player) := user_card_values_r(player) +  values_r(deck_r(deck_counter))
          END
       END;
       deck_counter := deck_counter + 1  
@@ -284,7 +284,7 @@ hit_banker(banker) =
                       user_card_values_r(banker) := user_card_values_r(banker) + 11
                   END
               END
-          ELSE user_card_values_r(banker) := values_r(deck_r(deck_counter))
+          ELSE user_card_values_r(banker) := user_card_values_r(banker) +  values_r(deck_r(deck_counter))
           END
       END;
       deck_counter := deck_counter + 1 
