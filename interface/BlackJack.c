@@ -241,13 +241,26 @@ void BlackJack__hit_player(BlackJack__USER player) {
         bb = (((aa) > (21)) ? true : false);
         if (bb == true) {
           BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + 1;
+          BlackJack__player_ace_r[player] = BlackJack__no;
         } else {
           BlackJack__player_ace_r[player] = BlackJack__yes;
           BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + 11;
         }
       }
     } else if (cc == BlackJack__yes) {
-      BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + 1;
+      {
+        int32_t aa;
+        bool bb;
+
+        aa = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+        bb = (((aa) > (21)) ? true : false);
+        if (bb == true) {
+          BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]] - 10;
+          BlackJack__player_ace_r[player] = BlackJack__no;
+        } else {
+          BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+        }
+      }
     } else {
       BlackJack__user_card_values_r[player] = BlackJack__user_card_values_r[player] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
     }
@@ -271,13 +284,26 @@ void BlackJack__hit_banker(BlackJack__USER banker) {
         bb = (((aa) > (21)) ? true : false);
         if (bb == true) {
           BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + 1;
+          BlackJack__banker_ace_r = BlackJack__no;
         } else {
           BlackJack__player_ace_r[banker] = BlackJack__yes;
           BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + 11;
         }
       }
     } else if (BlackJack__banker_ace_r == BlackJack__yes) {
-      BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + 1;
+      {
+        int32_t aa;
+        bool bb;
+
+        aa = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+        bb = (((aa) > (21)) ? true : false);
+        if (bb == true) {
+          BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]] - 10;
+          BlackJack__banker_ace_r = BlackJack__no;
+        } else {
+          BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
+        }
+      }
     } else {
       BlackJack__user_card_values_r[banker] = BlackJack__user_card_values_r[banker] + BlackJack__values_r[BlackJack__deck_r[BlackJack__deck_counter]];
     }
