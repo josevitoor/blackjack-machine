@@ -214,8 +214,6 @@ deal_initial_player_cards(index) =
        
    END;
 
-
-
 deal_initial_banker_cards = 
    BEGIN      
       banker_cards_r(banker_cards_counter) := deck_r(deck_counter);
@@ -246,20 +244,22 @@ hit_player(player) =
          player_cards_counter(players_r(table_r(player))) := pos + 1
       END;       
        
-      VAR ii IN
+      VAR ii, cc IN
          ii:= deck_r(deck_counter);
+         cc := player_ace_r(player);
          IF ii = ace
          THEN 
-             VAR aa, bb, cc IN
+             VAR aa, bb IN
                  aa := user_card_values_r(player) + 11;
                  bb := bool(aa > 21);
-                 cc := player_ace_r(player);
-                 IF cc = yes or bb = TRUE
+                 IF bb = TRUE
                  THEN user_card_values_r(player) := user_card_values_r(player) + 1
                  ELSE player_ace_r(player) := yes; 
                      user_card_values_r(player) := user_card_values_r(player) + 11
                  END
              END
+         ELSIF cc = yes
+         THEN user_card_values_r(player) := user_card_values_r(player) + 1
          ELSE user_card_values_r(player) := user_card_values_r(player) +  values_r(deck_r(deck_counter))
          END
       END;
@@ -277,13 +277,15 @@ hit_banker(banker) =
               VAR aa, bb IN
                   aa := user_card_values_r(banker) + 11;
                   bb := bool(aa > 21);
-                  IF banker_ace_r = yes or bb = TRUE
+                  IF bb = TRUE
                   THEN user_card_values_r(banker) := user_card_values_r(banker) + 1
                   ELSE      
                       player_ace_r(banker) := yes; 
                       user_card_values_r(banker) := user_card_values_r(banker) + 11
                   END
               END
+          ELSIF banker_ace_r = yes
+          THEN user_card_values_r(banker) := user_card_values_r(banker) + 1
           ELSE user_card_values_r(banker) := user_card_values_r(banker) +  values_r(deck_r(deck_counter))
           END
       END;
